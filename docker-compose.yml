@@ -1,0 +1,25 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host # Permite resolver DNS durante el build (evita EAI_AGAIN)
+      args:
+        DNS: 8.8.8.8
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "8081:8081"
+      - "19000:19000"
+      - "19001:19001"
+      - "19002:19002"
+    stdin_open: true
+    tty: true
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      # OPCIÓN A: Usa tunnel (recomendado, más simple)
+      # Descomenta la siguiente línea y comenta la de REACT_NATIVE_PACKAGER_HOSTNAME
+      # - EXPO_TUNNEL=true
+      # OPCIÓN B: Usa IP local (reemplaza 172.17.35.77 con tu IP real)
+      - REACT_NATIVE_PACKAGER_HOSTNAME=172.17.35.77
