@@ -7,10 +7,11 @@
  *   Define la paleta completa de colores del "Retro Garden DS".
  *   Inspirada en jardines retro de videojuegos 2D clásicos (8-bit/16-bit).
  *
- *   Usa tres familias cromáticas de forma estratégica:
- *     🟢 VERDE  → Acciones primarias, vida, crecimiento (CTAs, iconos activos)
- *     ⬜ BLANCO/CREMA → Superficies, respiración, claridad
- *     🟤 CAFÉ/TIERRA → Anclaje, calidez, bordes, navegación
+ *   Metáfora del jardín — cada color tiene un significado:
+ *     🟤 CAFÉ/TIERRA → Background, la tierra donde todo crece
+ *     🟢 VERDE       → Cards, botones, CTAs — las plantas
+ *     🌞 AMARILLO    → Acentos, badges, highlights — el sol / la luz
+ *     ⬜ BLANCO      → Bordes, divisores — las cercas del jardín
  *
  *   Incluye estados interactivos (pressed, disabled) para cada color semántico,
  *   cumpliendo con WCAG AA en contraste (≥ 4.5:1 para texto normal).
@@ -63,75 +64,93 @@ export interface ThemeColors {
   overlay: string;
 }
 
-// ── Light Mode — "Garden Day" (crema + verde + tierra) ──────────────────────
+// ── Light Mode — "Jardín de Día" ─────────────────────────────────────────────
+//
+// Fondo = tierra cálida clara, cards = verde fresco, acentos = sol amarillo,
+// bordes = cercas blancas del jardín.
+//
 
 export const lightColors: ThemeColors = {
-  primary: '#38B000',        // Verde lima intenso (CTA, vida)
-  primaryLight: '#70E000',
-  primarySoft: '#C6EBBE',    // Verde suave (fondos sutiles)
-  primaryPale: '#E8F5E1',    // Verde pálido (hover states)
-  pressed: '#2D8C00',        // Primary al presionar
-  secondary: '#795548',      // CAFÉ — tierra cálida (navegación, anclas)
+  // 🌿 Verde = plantas, botones, CTAs
+  primary: '#2E7D32',        // Verde bosque (botones principales)
+  primaryLight: '#4CAF50',   // Verde medio (hover, iconos activos)
+  primarySoft: '#C8E6C9',    // Verde suave (fondo de cards)
+  primaryPale: '#E8F5E9',    // Verde pálido (estados hover)
+  pressed: '#1B5E20',        // Verde oscuro al presionar
+  secondary: '#F9A825',      // 🌞 Amarillo sol (acentos, badges)
 
-  background: '#FFFDF7',     // Crema cálido (sol de jardín)
-  surface: '#FFFFFF',        // Blanco puro (tarjetas limpias)
-  surfaceVariant: '#F5F0E8', // Pergamino cálido (secciones alternas)
+  // 🟤 Café/tierra = fondo del jardín
+  background: '#EFEBE9',     // Tierra clara (la parcela del jardín)
+  surface: '#E8F5E9',        // Verde muy pálido (cards = las plantas)
+  surfaceVariant: '#FFF8E1', // Amarillo crema (secciones alternativas = luz)
 
-  textPrimary: '#2D2018',    // Marrón muy oscuro (legibilidad cálida)
+  // Texto — legible sobre tierra y verde
+  textPrimary: '#3E2723',    // Café muy oscuro (tierra profunda)
   textSecondary: '#5D4037',  // Café medio
-  textMuted: '#9E8E82',      // Gris cálido terroso
-  textOnPrimary: '#FFFFFF',
+  textMuted: '#8D6E63',      // Café claro
+  textOnPrimary: '#FFFFFF',  // Blanco sobre verde
 
-  border: '#8D6E63',         // Café medio (outline tipo sprite)
-  divider: '#D7CCC8',        // Café clarito
+  // ⬜ Blanco = cercas del jardín
+  border: '#FFFFFF',         // Cercas blancas
+  divider: '#D7CCC8',        // Piedra clara del camino
 
-  success: '#4CAF50',
-  warning: '#FFB300',        // Ámbar cálido (moneda RPG)
-  error: '#E53935',          // Rojo cálido retro
-  info: '#2979FF',
-  disabled: '#BCAAA4',       // Café deshabilitado
+  success: '#43A047',
+  warning: '#FFB300',        // Sol ámbar (moneda RPG)
+  error: '#E53935',          // Rojo retro
+  info: '#1E88E5',           // Cielo
+  disabled: '#BCAAA4',       // Tierra seca
 
-  chipBackground: '#EFEBE9', // Café ultra claro
-  chipText: '#4E342E',       // Café oscuro
-  chipBorder: '#BCAAA4',     // Café medio
+  // Chips = plantas pequeñas
+  chipBackground: '#C8E6C9', // Verde suave
+  chipText: '#1B5E20',       // Verde oscuro
+  chipBorder: '#A5D6A7',     // Verde medio borde
 
   white: '#FFFFFF',
   black: '#000000',
-  shadow: '#3E2723',         // Sombra café oscuro (pixel art)
+  shadow: '#3E2723',         // Sombra tierra (pixel art sólido)
   overlay: '#3E272380',
 };
 
-// ── Dark Mode — "Garden Night" (tierra oscura + verde brillante) ────────────
+// ── Dark Mode — "Jardín de Noche" ────────────────────────────────────────────
+//
+// Fondo = tierra oscura profunda, cards = verde oscuro, acentos = luciérnagas
+// amarillas, bordes = cercas de madera clara bajo la luna.
+//
 
 export const darkColors: ThemeColors = {
-  primary: '#66BB6A',        // Verde esmeralda suave
-  primaryLight: '#81C784',
-  primarySoft: '#2E7D32',    // Verde bosque profundo
-  primaryPale: '#1B3D1B',    // Verde casi negro
-  pressed: '#81C784',        // Verde claro al presionar
-  secondary: '#BCAAA4',      // Café claro cálido (ancla en oscuro)
+  // 🌿 Verde = plantas bajo la luna
+  primary: '#66BB6A',        // Verde esmeralda brillante
+  primaryLight: '#81C784',   // Verde claro (hover)
+  primarySoft: '#1B5E20',    // Verde bosque profundo
+  primaryPale: '#0D3B0D',    // Verde casi negro
+  pressed: '#A5D6A7',        // Verde claro al presionar
+  secondary: '#FFD54F',      // 🌙 Amarillo luciérnaga (acentos nocturnos)
 
-  background: '#1A120B',     // Tierra profunda (noche de jardín)
-  surface: '#2D1F14',        // Café oscuro (tarjetas)
-  surfaceVariant: '#3E2C1C', // Café medio oscuro
+  // 🟤 Tierra profunda de noche
+  background: '#1A120B',     // Tierra oscura (noche de jardín)
+  surface: '#1B3A1B',        // Verde muy oscuro (cards = plantas nocturnas)
+  surfaceVariant: '#2D1F14', // Café oscuro (secciones alternativas)
 
-  textPrimary: '#F5F0E8',    // Crema cálido (papel iluminado por luna)
-  textSecondary: '#BCAAA4',  // Café claro
-  textMuted: '#8D7B6E',      // Gris terroso
-  textOnPrimary: '#1A120B',
+  // Texto — legible en la oscuridad
+  textPrimary: '#F1F8E9',    // Verde blanquecino (hojas a la luz de luna)
+  textSecondary: '#C8E6C9',  // Verde claro
+  textMuted: '#8D6E63',      // Café medio (tierra lejana)
+  textOnPrimary: '#0D3B0D',  // Verde muy oscuro sobre verde brillante
 
-  border: '#5D4037',         // Café medio (bordes de sprite)
-  divider: '#3E2723',        // Café muy oscuro
+  // ⬜ Cercas de madera clara bajo la luna
+  border: '#A1887F',         // Madera clara (cercas iluminadas)
+  divider: '#4E342E',        // Madera oscura
 
   success: '#66BB6A',
-  warning: '#FFD54F',        // Dorado cálido
+  warning: '#FFD54F',        // Luciérnaga dorada
   error: '#EF5350',
-  info: '#42A5F5',
-  disabled: '#4E342E',       // Café deshabilitado
+  info: '#42A5F5',           // Cielo nocturno
+  disabled: '#4E342E',       // Tierra seca nocturna
 
-  chipBackground: '#3E2723', // Café oscuro
-  chipText: '#BCAAA4',       // Café claro
-  chipBorder: '#5D4037',     // Café medio
+  // Chips = brotes nocturnos
+  chipBackground: '#1B5E20', // Verde bosque
+  chipText: '#A5D6A7',       // Verde claro
+  chipBorder: '#2E7D32',     // Verde medio
 
   white: '#FFFFFF',
   black: '#000000',

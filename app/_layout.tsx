@@ -22,22 +22,22 @@ function RootNavigator() {
         ...DarkTheme,
         colors: {
           ...DarkTheme.colors,
-          background: '#1A120B',
-          card: '#2D1F14',
-          border: '#5D4037',
-          primary: '#66BB6A',
-          text: '#F5F0E8',
+          background: '#1A120B',  // Tierra oscura
+          card: '#1B3A1B',       // Verde oscuro (cards)
+          border: '#A1887F',     // Cerca de madera
+          primary: '#66BB6A',    // Verde esmeralda
+          text: '#F1F8E9',       // Verde blanquecino
         },
       }
     : {
         ...DefaultTheme,
         colors: {
           ...DefaultTheme.colors,
-          background: '#FFFDF7',
-          card: '#FFFFFF',
-          border: '#D7CCC8',
-          primary: '#38B000',
-          text: '#2D2018',
+          background: '#EFEBE9',  // Tierra clara
+          card: '#E8F5E9',       // Verde pálido (cards)
+          border: '#FFFFFF',     // Cerca blanca
+          primary: '#2E7D32',    // Verde bosque
+          text: '#3E2723',       // Café oscuro
         },
       };
 
