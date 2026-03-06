@@ -1,11 +1,24 @@
+import { useAppTheme } from '@/src/theme/designSystem';
 import { Stack } from 'expo-router';
 
 export default function AppLayout() {
-  // TODO: Aquí podrías verificar si el usuario está autenticado
-  // Si no lo está, redirigir a (auth)/login
+  const theme = useAppTheme();
+
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme.colors.background },
+      }}
+    >
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen
+        name="plant/[id]"
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
     </Stack>
   );
 }

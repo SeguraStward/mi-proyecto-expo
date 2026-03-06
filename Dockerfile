@@ -12,8 +12,11 @@ RUN apt-get update \
 # Directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Instalamos expo-cli de forma global (opcional, pero recomendado)
-RUN npm install -g expo-cli
+# Copiamos los archivos de dependencias primero (para aprovechar la caché de Docker)
+COPY package.json package-lock.json* ./
+
+# Instalamos las dependencias del proyecto (incluye expo como CLI local)
+RUN npm install
 
 # Exponemos los puertos necesarios para Expo
 # 8081: Metro Bundler
