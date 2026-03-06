@@ -7,14 +7,53 @@ import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { AppThemeProvider, useThemeToggle } from '@/src/context/ThemeContext';
 
 // Mantener splash screen visible mientras cargan las fuentes
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+/** Componente interno que ya tiene acceso al ThemeContext */
+function RootNavigator() {
+  const { mode } = useThemeToggle();
 
+  // Adaptar los colores del tema de navegación para que coincidan
+  const navTheme = mode === 'dark'
+    ? {
+        ...DarkTheme,
+        colors: {
+          ...DarkTheme.colors,
+          background: '#1A120B',
+          card: '#2D1F14',
+          border: '#5D4037',
+          primary: '#66BB6A',
+          text: '#F5F0E8',
+        },
+      }
+    : {
+        ...DefaultTheme,
+        colors: {
+          ...DefaultTheme.colors,
+          background: '#FFFDF7',
+          card: '#FFFFFF',
+          border: '#D7CCC8',
+          primary: '#38B000',
+          text: '#2D2018',
+        },
+      };
+
+  return (
+    <ThemeProvider value={navTheme}>
+      <Stack screenOptions={{ headerShown: false }}>
+        {/* Login desactivado temporalmente — entra directo a la app */}
+        {/* <Stack.Screen name="(auth)" /> */}
+        <Stack.Screen name="(app)" />
+      </Stack>
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+    </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     PressStart2P: PressStart2P_400Regular,
   });
@@ -34,13 +73,8 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        {/* Login desactivado temporalmente — entra directo a la app */}
-        {/* <Stack.Screen name="(auth)" /> */}
-        <Stack.Screen name="(app)" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AppThemeProvider>
+      <RootNavigator />
+    </AppThemeProvider>
   );
 }

@@ -13,6 +13,7 @@
  */
 
 import { RetroButton } from '@/src/components/ui';
+import { useThemeToggle } from '@/src/context/ThemeContext';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
@@ -107,6 +108,7 @@ const CategoryChip: React.FC<CategoryChipProps> = ({ name, icon }) => {
 export default function UserProfile() {
   const { user, togglePrivacy } = useUserProfile();
   const theme = useAppTheme();
+  const { mode, toggleTheme } = useThemeToggle();
   const s = getStyles(theme);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
@@ -235,6 +237,34 @@ export default function UserProfile() {
             accessibilityRole="switch"
             accessibilityLabel="Activar o desactivar perfil privado"
             accessibilityState={{ checked: user.privacidad }}
+          />
+        </View>
+      </View>
+
+      {/* ── Toggle tema claro/oscuro ─────────────────── */}
+      <View style={s.section}>
+        <View style={s.privacyBox}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.privacyLabel}>
+              {mode === 'dark' ? '🌙' : '☀️'} Tema {mode === 'dark' ? 'Oscuro' : 'Claro'}
+            </Text>
+            <Text style={s.privacyHint}>
+              {mode === 'dark'
+                ? 'Jardin de noche — tonos tierra'
+                : 'Jardin de dia — tonos crema'}
+            </Text>
+          </View>
+          <Switch
+            value={mode === 'dark'}
+            onValueChange={toggleTheme}
+            trackColor={{
+              false: theme.colors.border,
+              true: theme.colors.primarySoft,
+            }}
+            thumbColor={mode === 'dark' ? theme.colors.primary : theme.colors.white}
+            accessibilityRole="switch"
+            accessibilityLabel="Cambiar entre tema claro y oscuro"
+            accessibilityState={{ checked: mode === 'dark' }}
           />
         </View>
       </View>

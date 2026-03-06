@@ -5,18 +5,15 @@
  *
  * Propósito:
  *   Define la paleta completa de colores del "Retro Garden DS".
- *   Inspirada en jardines retro de videojuegos 2D clásicos (8-bit/16-bit):
- *   verdes vibrantes, tierra cálida, cremas amarillentos.
+ *   Inspirada en jardines retro de videojuegos 2D clásicos (8-bit/16-bit).
+ *
+ *   Usa tres familias cromáticas de forma estratégica:
+ *     🟢 VERDE  → Acciones primarias, vida, crecimiento (CTAs, iconos activos)
+ *     ⬜ BLANCO/CREMA → Superficies, respiración, claridad
+ *     🟤 CAFÉ/TIERRA → Anclaje, calidez, bordes, navegación
  *
  *   Incluye estados interactivos (pressed, disabled) para cada color semántico,
  *   cumpliendo con WCAG AA en contraste (≥ 4.5:1 para texto normal).
- *
- * Paleta clave:
- *   - Primary: #38B000 (Verde lima intenso — botones de acción)
- *   - Secondary: #008000 (Verde oscuro — navegación)
- *   - Surface: #F1F8E9 (Papel crema — evita blanco puro, look retro)
- *   - Text: #1A1A1A (Casi negro — legibilidad máxima)
- *   - Error: #FF0000 (Rojo puro de consola)
  *
  * @see docs/DESIGN_SYSTEM_RETRO.md — Sección A.1 Colores
  * ============================================================================
@@ -66,75 +63,75 @@ export interface ThemeColors {
   overlay: string;
 }
 
-// ── Light Mode — "Retro Forest Day" ──────────────────────────────────────────
+// ── Light Mode — "Garden Day" (crema + verde + tierra) ──────────────────────
 
 export const lightColors: ThemeColors = {
-  primary: '#38B000',       // Verde lima intenso (CTA)
+  primary: '#38B000',        // Verde lima intenso (CTA, vida)
   primaryLight: '#70E000',
-  primarySoft: '#9EF01A',
-  primaryPale: '#CCFF33',
-  pressed: '#2D8C00',       // Primary al presionar
-  secondary: '#008000',     // Verde oscuro (navegación)
+  primarySoft: '#C6EBBE',    // Verde suave (fondos sutiles)
+  primaryPale: '#E8F5E1',    // Verde pálido (hover states)
+  pressed: '#2D8C00',        // Primary al presionar
+  secondary: '#795548',      // CAFÉ — tierra cálida (navegación, anclas)
 
-  background: '#F1F8E9',    // Papel crema amarillento (retro)
-  surface: '#FAFFF5',
-  surfaceVariant: '#E8F5E1',
+  background: '#FFFDF7',     // Crema cálido (sol de jardín)
+  surface: '#FFFFFF',        // Blanco puro (tarjetas limpias)
+  surfaceVariant: '#F5F0E8', // Pergamino cálido (secciones alternas)
 
-  textPrimary: '#1A1A1A',   // Casi negro = legibilidad retro
-  textSecondary: '#3D5A3D',
-  textMuted: '#7A8C7A',
+  textPrimary: '#2D2018',    // Marrón muy oscuro (legibilidad cálida)
+  textSecondary: '#5D4037',  // Café medio
+  textMuted: '#9E8E82',      // Gris cálido terroso
   textOnPrimary: '#FFFFFF',
 
-  border: '#2D6A2D',        // Grueso, tipo outline de sprite
-  divider: '#C5E1A5',
+  border: '#8D6E63',         // Café medio (outline tipo sprite)
+  divider: '#D7CCC8',        // Café clarito
 
-  success: '#00C853',
-  warning: '#FFD600',        // Amarillo puro (moneda de RPG)
-  error: '#FF0000',          // Rojo puro de consola 8-bit
+  success: '#4CAF50',
+  warning: '#FFB300',        // Ámbar cálido (moneda RPG)
+  error: '#E53935',          // Rojo cálido retro
   info: '#2979FF',
-  disabled: '#B0BEC5',
+  disabled: '#BCAAA4',       // Café deshabilitado
 
-  chipBackground: '#DCEDC8',
-  chipText: '#33691E',
-  chipBorder: '#AED581',
+  chipBackground: '#EFEBE9', // Café ultra claro
+  chipText: '#4E342E',       // Café oscuro
+  chipBorder: '#BCAAA4',     // Café medio
 
   white: '#FFFFFF',
   black: '#000000',
-  shadow: '#1A1A1A',         // Sombra sólida (sin blur = pixel art)
-  overlay: '#00000080',
+  shadow: '#3E2723',         // Sombra café oscuro (pixel art)
+  overlay: '#3E272380',
 };
 
-// ── Dark Mode — "Retro Forest Night" (pantalla CRT) ─────────────────────────
+// ── Dark Mode — "Garden Night" (tierra oscura + verde brillante) ────────────
 
 export const darkColors: ThemeColors = {
-  primary: '#70E000',
-  primaryLight: '#9EF01A',
-  primarySoft: '#38B000',
-  primaryPale: '#1B3D00',
-  pressed: '#9EF01A',
-  secondary: '#00C853',
+  primary: '#66BB6A',        // Verde esmeralda suave
+  primaryLight: '#81C784',
+  primarySoft: '#2E7D32',    // Verde bosque profundo
+  primaryPale: '#1B3D1B',    // Verde casi negro
+  pressed: '#81C784',        // Verde claro al presionar
+  secondary: '#BCAAA4',      // Café claro cálido (ancla en oscuro)
 
-  background: '#0A1A0A',    // Verde muy oscuro (CRT terminal)
-  surface: '#142814',
-  surfaceVariant: '#1E3A1E',
+  background: '#1A120B',     // Tierra profunda (noche de jardín)
+  surface: '#2D1F14',        // Café oscuro (tarjetas)
+  surfaceVariant: '#3E2C1C', // Café medio oscuro
 
-  textPrimary: '#E8F5E9',
-  textSecondary: '#A5D6A7',
-  textMuted: '#66896E',
-  textOnPrimary: '#0A1A0A',
+  textPrimary: '#F5F0E8',    // Crema cálido (papel iluminado por luna)
+  textSecondary: '#BCAAA4',  // Café claro
+  textMuted: '#8D7B6E',      // Gris terroso
+  textOnPrimary: '#1A120B',
 
-  border: '#388E3C',
-  divider: '#1B5E20',
+  border: '#5D4037',         // Café medio (bordes de sprite)
+  divider: '#3E2723',        // Café muy oscuro
 
-  success: '#69F0AE',
-  warning: '#FFFF00',
-  error: '#FF5252',
-  info: '#448AFF',
-  disabled: '#37474F',
+  success: '#66BB6A',
+  warning: '#FFD54F',        // Dorado cálido
+  error: '#EF5350',
+  info: '#42A5F5',
+  disabled: '#4E342E',       // Café deshabilitado
 
-  chipBackground: '#1B5E20',
-  chipText: '#A5D6A7',
-  chipBorder: '#2E7D32',
+  chipBackground: '#3E2723', // Café oscuro
+  chipText: '#BCAAA4',       // Café claro
+  chipBorder: '#5D4037',     // Café medio
 
   white: '#FFFFFF',
   black: '#000000',

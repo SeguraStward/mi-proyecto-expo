@@ -23,7 +23,9 @@
  * ============================================================================
  */
 
-import { ColorSchemeName, useColorScheme } from 'react-native';
+import { ColorSchemeName } from 'react-native';
+
+import { useThemeToggle } from '@/src/context/ThemeContext';
 
 // ── Re-exportar tipos de cada módulo ──────────────────────────────────────────
 
@@ -76,10 +78,11 @@ export function getAppTheme(mode: ColorSchemeName): AppTheme {
 }
 
 /**
- * Hook que retorna el tema activo según la preferencia del sistema.
+ * Hook que retorna el tema activo según la preferencia del usuario.
+ * Lee del ThemeContext (toggle manual) en lugar del sistema.
  * Uso: const theme = useAppTheme();
  */
 export function useAppTheme(): AppTheme {
-  const mode = useColorScheme();
+  const { mode } = useThemeToggle();
   return getAppTheme(mode);
 }
