@@ -115,12 +115,12 @@ export default function PlantDetail() {
         <StatBar label="CREC" value={stats.growth} color={theme.colors.primary} theme={theme} />
       </View>
 
-      {/* ── Consejos (estilo log de consola) ──── */}
+      {/* ── Consejos (estilo tierra/café) ──── */}
       <View style={s.consoleBox}>
-        <Text style={s.consoleTitle}>{'$ CONSEJOS'}</Text>
+        <Text style={s.consoleTitle}>{'🌱 CONSEJOS'}</Text>
         {tips.map((tip, i) => (
           <Text key={i} style={s.consoleLine}>
-            {'>'} {tip}
+            {'•'} {tip}
           </Text>
         ))}
       </View>
@@ -309,25 +309,31 @@ function getStyles(t: AppTheme) {
       textAlign: 'right',
     },
 
-    // ── Caja de consola (consejos) ───────────────
+    // ── Caja de consejos (estilo tierra/café) ────
     consoleBox: {
-      backgroundColor: t.mode === 'dark' ? '#0A0A0A' : '#1A1A1A',
+      backgroundColor: '#795548',
       borderWidth: t.borderWidths.thick,
-      borderColor: t.colors.primary,
-      borderRadius: t.radius.sm,
+      borderColor: '#4E342E',
+      borderRadius: t.radius.md,
       padding: t.spacing.lg,
       marginBottom: t.spacing.xl,
+      // Sombra sólida marrón oscuro
+      shadowColor: '#3E2723',
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 3,
     },
     consoleTitle: {
       fontFamily: t.typography.fontFamily,
       fontSize: t.typography.sizes.caption,
-      color: t.colors.primary,
+      color: '#FFF8E1',
       marginBottom: t.spacing.md,
     },
     consoleLine: {
       fontFamily: t.typography.fontFamilyMono,
       fontSize: t.typography.sizes.bodySmall,
-      color: '#38B000',
+      color: '#D7CCC8',
       lineHeight: t.typography.sizes.bodySmall * t.typography.lineHeights.relaxed,
       marginBottom: t.spacing.xs,
     },
