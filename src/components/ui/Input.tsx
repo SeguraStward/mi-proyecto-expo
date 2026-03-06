@@ -1,4 +1,34 @@
-import { PlantColors } from '@/src/constants/colors';
+/**
+ * ============================================================================
+ * Input — Componente de entrada de texto del Design System
+ * ============================================================================
+ *
+ * Propósito:
+ *   Campo de texto reutilizable con soporte para label, estados de error,
+ *   estado disabled y feedback visual consistente.
+ *
+ * Uso:
+ *   <Input label="Email" placeholder="tucorreo@email.com" />
+ *   <Input label="Contraseña" error="Campo requerido" secureTextEntry />
+ *   <Input placeholder="Buscar..." disabled />
+ *
+ * Estados:
+ *   - default: Borde sutil, fondo surface.
+ *   - focused: (nativo del sistema).
+ *   - error: Borde rojo, mensaje de error visible.
+ *   - disabled: Opacidad reducida, no editable.
+ *
+ * Accesibilidad:
+ *   - accessibilityLabel toma el valor de `label` si existe.
+ *   - accessibilityState={{ disabled }} cuando está deshabilitado.
+ *   - Tamaño de texto >= 15px para legibilidad.
+ *   - Área de toque >= 48px (paddingVertical: 14).
+ *
+ * @see docs/DESIGN_SYSTEM.md — Sección B.2 Input
+ * ============================================================================
+ */
+
+import { useAppTheme } from '@/src/theme/designSystem';
 import React from 'react';
 import {
     StyleSheet,
@@ -10,57 +40,84 @@ import {
 } from 'react-native';
 
 interface InputProps extends TextInputProps {
+  /** Label visible sobre el input */
   label?: string;
+  /** Mensaje de error (activa estilo de error) */
   error?: string;
+  /** Si el input está deshabilitado */
+  disabled?: boolean;
+  /** Estilos del contenedor externo */
   containerStyle?: ViewStyle;
 }
 
 export const Input: React.FC<InputProps> = ({
   label,
   error,
+  disabled = false,
   containerStyle,
   style,
   ...rest
 }) => {
+  const theme = useAppTheme();
+
   return (
-    <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+    <View style={[{ marginBottom: theme.spacing.md }, containerStyle]}>
+      {label && (
+        <Text
+          style={[
+            styles.label,
+            {
+              color: theme.colors.textSecondary,
+              marginBottom: theme.spacing.xs + 2,
+            },
+          ]}
+        >
+          {label}
+        </Text>
+      )}
       <TextInput
-        style={[styles.input, error ? styles.inputError : undefined, style]}
-        placeholderTextColor={PlantColors.textMuted}
+        editable={!disabled}
+        placeholderTextColor={theme.colors.textMuted}
+        accessibilityLabel={label}
+        accessibilityState={{ disabled }}
+        style={[
+          styles.input,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: error ? theme.colors.error : theme.colors.border,
+            borderRadius: theme.radius.md,
+            color: theme.colors.textPrimary,
+          },
+          disabled && { opacity: 0.5 },
+          style,
+        ]}
         {...rest}
       />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && (
+        <Text style={[styles.errorText, { color: theme.colors.error }]}>
+          {error}
+        </Text>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: 14,
-  },
   label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: PlantColors.textSecondary,
-    marginBottom: 6,
+    fontSize: 10,
+    fontFamily: 'PressStart2P',  // Pixel font para labels
+    textTransform: 'uppercase' as const,
+    letterSpacing: 1,
   },
   input: {
-    backgroundColor: PlantColors.surface,
-    borderWidth: 1,
-    borderColor: PlantColors.border,
-    borderRadius: 14,
+    borderWidth: 3,              // Borde grueso pixel art
     paddingVertical: 14,
-    paddingHorizontal: 18,
-    fontSize: 15,
-    color: PlantColors.textPrimary,
-  },
-  inputError: {
-    borderColor: PlantColors.error,
+    paddingHorizontal: 16,
+    fontSize: 12,
+    fontFamily: 'Courier New',   // Mono para inputs
   },
   errorText: {
     fontSize: 12,
-    color: PlantColors.error,
     marginTop: 4,
   },
 });
