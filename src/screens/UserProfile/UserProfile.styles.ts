@@ -1,55 +1,69 @@
-import { PlantColors } from '@/src/constants/colors';
+/**
+ * ============================================================================
+ * UserProfile.styles — Estilos de la pantalla de perfil de usuario
+ * ============================================================================
+ *
+ * Propósito:
+ *   Estilos extraídos para la pantalla UserProfile. Ahora usa tokens
+ *   del Design System (getAppTheme) para colores, espaciado, radios
+ *   y elevaciones, garantizando coherencia con el resto de la app.
+ *
+ * Nota: Este archivo usa getAppTheme('light') como base estática.
+ *   Para soporte dinámico de dark mode, los estilos dependientes de
+ *   color se aplican inline en el componente usando useAppTheme().
+ *
+ * @see docs/DESIGN_SYSTEM.md
+ * ============================================================================
+ */
+
+import { getAppTheme } from '@/src/theme/designSystem';
 import { StyleSheet } from 'react-native';
+
+// Obtenemos valores base para estilos estáticos (los colores dinámicos se aplican inline)
+const t = getAppTheme('light');
 
 export const styles = StyleSheet.create({
   // ── Contenedor general ────────────────────────────────────
   container: {
     flex: 1,
-    backgroundColor: PlantColors.background,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: t.spacing['4xl'],
   },
 
   // ── Header ────────────────────────────────────────────────
   header: {
     alignItems: 'center',
     paddingTop: 60,
-    paddingBottom: 24,
-    backgroundColor: PlantColors.primaryPale,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingBottom: t.spacing['2xl'],
+    borderBottomLeftRadius: t.radius.xl + 4,
+    borderBottomRightRadius: t.radius.xl + 4,
   },
   avatarWrapper: {
     width: 110,
     height: 110,
-    borderRadius: 55,
+    borderRadius: t.radius.full,
     borderWidth: 3,
-    borderColor: PlantColors.primary,
     overflow: 'hidden',
-    marginBottom: 12,
-    backgroundColor: PlantColors.white,
+    marginBottom: t.spacing.md,
   },
   avatar: {
     width: '100%',
     height: '100%',
   },
   nickname: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: PlantColors.textPrimary,
+    fontSize: t.typography.sizes.subtitle + 2,
+    fontWeight: t.typography.weights.bold,
   },
   fullName: {
-    fontSize: 14,
-    color: PlantColors.textSecondary,
+    fontSize: t.typography.sizes.bodySmall,
     marginTop: 2,
   },
   bio: {
-    fontSize: 13,
-    color: PlantColors.textMuted,
-    marginTop: 8,
+    fontSize: t.typography.sizes.caption + 1,
+    marginTop: t.spacing.sm,
     textAlign: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: t.spacing['4xl'],
     lineHeight: 18,
   },
 
@@ -57,87 +71,70 @@ export const styles = StyleSheet.create({
   statsCard: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: PlantColors.surface,
-    marginHorizontal: 20,
+    marginHorizontal: t.spacing.xl,
     marginTop: -20,
-    borderRadius: 20,
-    paddingVertical: 20,
-    paddingHorizontal: 12,
-    // sombra
-    shadowColor: PlantColors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 12,
-    elevation: 6,
+    borderRadius: t.radius.lg,
+    paddingVertical: t.spacing.xl,
+    paddingHorizontal: t.spacing.md,
   },
   statItem: {
     alignItems: 'center',
     flex: 1,
   },
   statValue: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: PlantColors.primary,
+    fontSize: t.typography.sizes.subtitle + 2,
+    fontWeight: t.typography.weights.bold,
   },
   statLabel: {
-    fontSize: 12,
-    color: PlantColors.textSecondary,
-    marginTop: 4,
+    fontSize: t.typography.sizes.caption,
+    marginTop: t.spacing.xs,
   },
   statDivider: {
     width: 1,
-    backgroundColor: PlantColors.divider,
-    marginVertical: 4,
+    marginVertical: t.spacing.xs,
   },
 
   // ── Secciones ─────────────────────────────────────────────
   section: {
-    marginTop: 28,
-    paddingHorizontal: 20,
+    marginTop: t.spacing['2xl'] + 4,
+    paddingHorizontal: t.spacing.xl,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: PlantColors.textPrimary,
-    marginBottom: 12,
+    fontSize: t.typography.sizes.body,
+    fontWeight: t.typography.weights.semibold,
+    marginBottom: t.spacing.md,
   },
 
   // ── Categorías (chips) ────────────────────────────────────
   categoryChip: {
-    backgroundColor: PlantColors.chipBackground,
     borderWidth: 1,
-    borderColor: PlantColors.chipBorder,
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 18,
-    marginRight: 10,
+    borderRadius: t.radius.lg,
+    paddingVertical: t.spacing.sm,
+    paddingHorizontal: t.spacing.lg + 2,
+    marginRight: t.spacing.sm + 2,
   },
   categoryChipText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: PlantColors.chipText,
+    fontSize: t.typography.sizes.caption + 1,
+    fontWeight: t.typography.weights.medium,
   },
 
   // ── Planta favorita ───────────────────────────────────────
   favoritePlantCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: PlantColors.primaryPale,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: t.radius.lg - 4,
+    padding: t.spacing.lg,
   },
   favoritePlantEmoji: {
     fontSize: 28,
-    marginRight: 12,
+    marginRight: t.spacing.md,
   },
   favoritePlantLabel: {
-    fontSize: 12,
-    color: PlantColors.textSecondary,
+    fontSize: t.typography.sizes.caption,
   },
   favoritePlantName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: PlantColors.textPrimary,
+    fontSize: t.typography.sizes.body,
+    fontWeight: t.typography.weights.semibold,
     marginTop: 2,
   },
 
@@ -145,15 +142,14 @@ export const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: t.spacing.sm,
   },
   infoEmoji: {
     fontSize: 18,
-    marginRight: 8,
+    marginRight: t.spacing.sm,
   },
   infoText: {
-    fontSize: 14,
-    color: PlantColors.textSecondary,
+    fontSize: t.typography.sizes.bodySmall,
   },
 
   // ── Privacidad switch ─────────────────────────────────────
@@ -161,27 +157,23 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: PlantColors.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 12,
+    borderRadius: t.radius.lg - 4,
+    padding: t.spacing.lg,
+    marginTop: t.spacing.md,
     borderWidth: 1,
-    borderColor: PlantColors.border,
   },
   privacyLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: PlantColors.textPrimary,
+    fontSize: t.typography.sizes.body - 1,
+    fontWeight: t.typography.weights.medium,
   },
   privacyHint: {
-    fontSize: 12,
-    color: PlantColors.textMuted,
+    fontSize: t.typography.sizes.caption,
     marginTop: 2,
   },
 
   // ── Botón editar ──────────────────────────────────────────
   editButtonWrapper: {
-    marginTop: 32,
-    paddingHorizontal: 20,
+    marginTop: t.spacing['3xl'],
+    paddingHorizontal: t.spacing.xl,
   },
 });
