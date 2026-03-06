@@ -50,24 +50,51 @@ Join our community of developers creating universal apps.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 # 📱 Mi Proyecto Expo con Docker
 
-Este proyecto utiliza **Docker** para mantener el sistema anfitrión limpio y asegurar que todos los desarrolladores usen la misma versión de Node.js y dependencias.
+Este proyecto utiliza **Docker** para mantener el sistema anfitrión limpio y asegurar que todos los desarrolladores usen la misma versión de Node.js y dependencias. 
+**Nota:** Al usar Docker, todos los comandos de desarrollo y paquetes deben ejecutarse *dentro* del contenedor para evitar problemas de permisos (`EACCES`).
 
 ---
 
-## 🚀 Comandos Rápidos
+## 🚀 Guía de Uso Rápido
 
-### 1. Iniciar el entorno (Día a día)
-Para levantar el contenedor y ver el código QR de Expo:
+### 1. Iniciar la Aplicación
+
+Para levantar el entorno y el servidor de desarrollo (Metro bundler):
+
 ```bash
-# Levanta el contenedor en segundo plano
+# Paso 1: Levanta el contenedor en segundo plano (si no está corriendo)
 docker compose up -d
 
-# Inicia el Metro Bundler de Expo
+# Paso 2: Inicia Expo (Genera el código QR)
 docker compose exec app npx expo start
-# mi-proyecto-expo
-# mi-proyecto-expo
-# mi-proyecto-expo
-# mi-proyecto-expo
-# mi-proyecto-expo
-# mi-proyecto-expo
-# mi-proyecto-expo
+```
+
+**Opciones de ejecución importantes:**
+* **Conexión local fallida (Expo Go):** Si el código QR se queda cargando y no conecta en tu celular por restricciones de la red Docker, utiliza el modo túnel:
+  ```bash
+  docker compose exec app npx expo start --tunnel
+  ```
+* **Probar en la Web:** Para abrir directamente la visualización web en tu navegador:
+  ```bash
+  docker compose exec app npx expo start -w
+  ```
+
+### 2. Instalar y Actualizar Paquetes
+
+No uses `npm install` localmente desde tu terminal raíz. **Siempre hazlo dentro del contenedor** para mantener sincronizadas las dependencias del `package.json` y el `node_modules` del contenedor.
+
+```bash
+# Instalar un nuevo paquete (Ejemplo: axios)
+docker compose exec app npm install axios
+
+# Actualizar todas las dependencias
+docker compose exec app npm install
+
+# Agregar un paquete nativo que requiere configuración de Expo (Ejemplo: expo-font)
+docker compose exec app npx expo install expo-font
+```
+
+### 3. Solución de Problemas de Permisos (EACCES)
+
+Si experimentas errores como `EACCES: permission denied` al intentar guardar archivos como `expo-env.d.ts`, significa que esos archivos se crearon con permisos del contenedor (root). 
+Para solucionarlo, nunca inicies `npx expo start` fuera del contenedor, asegúrate siempre de usar el prefijo `docker compose exec app` como se indicó arriba.
