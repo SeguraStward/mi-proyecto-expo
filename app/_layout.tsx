@@ -33,11 +33,11 @@ function RootNavigator() {
         ...DefaultTheme,
         colors: {
           ...DefaultTheme.colors,
-          background: '#EFEBE9',  // Tierra clara
-          card: '#E8F5E9',       // Verde pálido (cards)
-          border: '#FFFFFF',     // Cerca blanca
+          background: '#D7CCC8',  // Tierra media
+          card: '#C8E6C9',       // Verde suave (cards)
+          border: '#2E7D32',     // Verde bosque (borde)
           primary: '#2E7D32',    // Verde bosque
-          text: '#3E2723',       // Café oscuro
+          text: '#1B0F0A',       // Café casi negro
         },
       };
 

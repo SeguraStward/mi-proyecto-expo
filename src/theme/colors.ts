@@ -74,25 +74,25 @@ export const lightColors: ThemeColors = {
   // 🌿 Verde = plantas, botones, CTAs
   primary: '#2E7D32',        // Verde bosque (botones principales)
   primaryLight: '#4CAF50',   // Verde medio (hover, iconos activos)
-  primarySoft: '#C8E6C9',    // Verde suave (fondo de cards)
-  primaryPale: '#E8F5E9',    // Verde pálido (estados hover)
+  primarySoft: '#A5D6A7',    // Verde medio suave (fondo de cards)
+  primaryPale: '#C8E6C9',    // Verde pálido (estados hover)
   pressed: '#1B5E20',        // Verde oscuro al presionar
   secondary: '#F9A825',      // 🌞 Amarillo sol (acentos, badges)
 
   // 🟤 Café/tierra = fondo del jardín
-  background: '#EFEBE9',     // Tierra clara (la parcela del jardín)
-  surface: '#E8F5E9',        // Verde muy pálido (cards = las plantas)
+  background: '#D7CCC8',     // Tierra media (la parcela del jardín)
+  surface: '#C8E6C9',        // Verde suave notorio (cards = las plantas)
   surfaceVariant: '#FFF8E1', // Amarillo crema (secciones alternativas = luz)
 
   // Texto — legible sobre tierra y verde
-  textPrimary: '#3E2723',    // Café muy oscuro (tierra profunda)
-  textSecondary: '#5D4037',  // Café medio
-  textMuted: '#8D6E63',      // Café claro
+  textPrimary: '#1B0F0A',    // Café casi negro (máxima legibilidad)
+  textSecondary: '#3E2723',  // Café oscuro
+  textMuted: '#5D4037',      // Café medio
   textOnPrimary: '#FFFFFF',  // Blanco sobre verde
 
-  // ⬜ Blanco = cercas del jardín
-  border: '#FFFFFF',         // Cercas blancas
-  divider: '#D7CCC8',        // Piedra clara del camino
+  // 🌿 Bordes verdes = tallos y ramas del jardín
+  border: '#2E7D32',         // Verde bosque (borde tipo sprite)
+  divider: '#A5D6A7',        // Verde medio (caminos entre plantas)
 
   success: '#43A047',
   warning: '#FFB300',        // Sol ámbar (moneda RPG)
@@ -101,9 +101,9 @@ export const lightColors: ThemeColors = {
   disabled: '#BCAAA4',       // Tierra seca
 
   // Chips = plantas pequeñas
-  chipBackground: '#C8E6C9', // Verde suave
+  chipBackground: '#A5D6A7', // Verde medio suave
   chipText: '#1B5E20',       // Verde oscuro
-  chipBorder: '#A5D6A7',     // Verde medio borde
+  chipBorder: '#2E7D32',     // Verde bosque borde
 
   white: '#FFFFFF',
   black: '#000000',
