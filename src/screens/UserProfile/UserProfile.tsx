@@ -1,107 +1,39 @@
 /**
  * ============================================================================
- * UserProfile — Pantalla de perfil estilo RPG / 2D pixel art
+ * UserProfile — Pantalla de perfil
  * ============================================================================
  *
- * Propósito:
- *   Perfil de usuario con estética Retro Garden DS: bordes gruesos, sombra
- *   sólida, tipografía pixel y avatar interactivo que permite cargar foto
- *   desde galería/cámara con expo-image-picker.
+ * Proposito:
+ *   Perfil de usuario con cards limpias y toggle compacto de solo iconos.
+ *   Seccion Info: stats, bio, planta favorita.
+ *   Seccion Config: toggles de tema y privacidad.
  *
  * @see docs/DESIGN_SYSTEM_RETRO.md
  * ============================================================================
  */
 
-import { RetroButton } from '@/src/components/ui';
 import { useThemeToggle } from '@/src/context/ThemeContext';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
-  Alert,
-  FlatList,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
-// ── Sub-componentes internos ─────────────────────────────────
+// ── Constantes ───────────────────────────────────────────────
 
-interface StatProps {
-  value: number | string;
-  label: string;
-}
-
-const StatItem: React.FC<StatProps> = ({ value, label }) => {
-  const theme = useAppTheme();
-  return (
-    <View style={{ alignItems: 'center', flex: 1 }} accessibilityLabel={`${label}: ${value}`}>
-      <Text style={{
-        fontFamily: theme.typography.fontFamily,
-        fontSize: theme.typography.sizes.body,
-        color: theme.colors.primary,
-      }}>{value}</Text>
-      <Text style={{
-        fontFamily: theme.typography.fontFamilyMono,
-        fontSize: theme.typography.sizes.overline,
-        color: theme.colors.textMuted,
-        textTransform: 'uppercase',
-        marginTop: 2,
-      }}>{label}</Text>
-    </View>
-  );
-};
-
-interface CategoryChipProps {
-  name: string;
-  icon?: string;
-}
-
-const CategoryChip: React.FC<CategoryChipProps> = ({ name, icon }) => {
-  const theme = useAppTheme();
-  const CATEGORY_ICONS: Record<string, string> = {
-    'Suculentas': '🌵',
-    'Tropicales': '🌴',
-    'Cactus': '🏜️',
-    'Aromáticas': '🌿',
-    'Helechos': '🌱',
-    'Interior': '🏠',
-    'Exterior': '☀️',
-  };
-  const emoji = icon ?? CATEGORY_ICONS[name] ?? '🌻';
-
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: theme.colors.surfaceVariant,
-        borderWidth: theme.borderWidths.medium,
-        borderColor: theme.colors.border,
-        borderRadius: theme.radius.sm,
-        paddingVertical: theme.spacing.sm,
-        paddingHorizontal: theme.spacing.md,
-        marginRight: theme.spacing.sm,
-        gap: 4,
-      }}
-      accessibilityLabel={`Categoría: ${name}`}
-    >
-      <Text style={{ fontSize: 14 }}>{emoji}</Text>
-      <Text style={{
-        fontFamily: theme.typography.fontFamilyMono,
-        fontSize: theme.typography.sizes.overline,
-        color: theme.colors.textPrimary,
-        textTransform: 'uppercase',
-      }}>{name}</Text>
-    </View>
-  );
-};
+type ProfileTab = 'info' | 'settings';
 
 // ── Componente principal ─────────────────────────────────────
 
@@ -111,16 +43,12 @@ export default function UserProfile() {
   const { mode, toggleTheme } = useThemeToggle();
   const s = getStyles(theme);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
-
-  const formattedBirthday = new Date(user.cumple).toLocaleDateString('es-ES', {
-    day: 'numeric',
-    month: 'long',
-  });
+  const [activeTab, setActiveTab] = useState<ProfileTab>('info');
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galería para cambiar tu foto de perfil.');
+      Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galeria para cambiar tu foto de perfil.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -134,20 +62,14 @@ export default function UserProfile() {
     }
   };
 
-  const handleEditProfile = () => {
-    Alert.alert('Editar Perfil', 'Aquí iría la navegación a la pantalla de edición.');
-  };
-
   return (
     <ScrollView
       style={s.container}
       contentContainerStyle={s.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* ── Header retro con "marco de carta RPG" ────── */}
+      {/* ── Header: avatar + nombre + toggle ─────── */}
       <View style={s.header}>
-        <Text style={s.headerTitle}>⚔️ PERFIL DE JARDINERO</Text>
-
         {/* Avatar interactivo */}
         <TouchableOpacity
           onPress={handlePickImage}
@@ -161,123 +83,157 @@ export default function UserProfile() {
               style={s.avatar}
               accessibilityLabel={`Foto de perfil de ${user.apodo}`}
             />
-            {/* Badge de cámara pixel art */}
             <View style={s.cameraBadge}>
-              <Text style={{ fontSize: 16 }}>📷</Text>
+              <MaterialCommunityIcons name="camera" size={14} color={theme.colors.textOnPrimary} />
             </View>
           </View>
         </TouchableOpacity>
 
-        <Text style={s.nickname}>{user.apodo}</Text>
-        <Text style={s.fullName}>{user.nombre}</Text>
-        <Text style={s.bio}>{user.descripcion}</Text>
+        <Text style={s.displayName}>{user.nombre}</Text>
+        <Text style={s.handle}>{user.apodo}</Text>
+
+        {/* ── Toggle compacto de solo iconos ──────── */}
+        <View style={s.togglePill}>
+          <Pressable
+            onPress={() => setActiveTab('info')}
+            style={[s.toggleBtn, activeTab === 'info' && s.toggleBtnActive]}
+            accessibilityRole="tab"
+            accessibilityLabel="Info del explorador"
+            accessibilityState={{ selected: activeTab === 'info' }}
+          >
+            <MaterialCommunityIcons
+              name="account-outline"
+              size={18}
+              color={activeTab === 'info' ? theme.colors.textOnPrimary : theme.colors.textSecondary}
+            />
+          </Pressable>
+          <Pressable
+            onPress={() => setActiveTab('settings')}
+            style={[s.toggleBtn, activeTab === 'settings' && s.toggleBtnActive]}
+            accessibilityRole="tab"
+            accessibilityLabel="Configuracion"
+            accessibilityState={{ selected: activeTab === 'settings' }}
+          >
+            <MaterialCommunityIcons
+              name="cog-outline"
+              size={18}
+              color={activeTab === 'settings' ? theme.colors.textOnPrimary : theme.colors.textSecondary}
+            />
+          </Pressable>
+        </View>
       </View>
 
-      {/* ── Stats bar RPG ────────────────────────────── */}
-      <View style={s.statsBar}>
-        <StatItem value={`🔥${user.racha}`} label="Racha" />
-        <View style={s.statDivider} />
-        <StatItem value={user.cantidadPlantas} label="Plantas" />
-        <View style={s.statDivider} />
-        <StatItem value={user.amigos} label="Amigos" />
-      </View>
+      {/* ── Contenido segun tab activo ────────────── */}
+      {activeTab === 'info' ? (
+        /* ── INFO DEL EXPLORADOR ── */
+        <View style={s.infoContainer}>
+          {/* Stats del jardin */}
+          <View style={s.statsGrid}>
+            <View style={s.statCard}>
+              <MaterialCommunityIcons name="flower" size={20} color={theme.colors.primary} />
+              <Text style={s.statValue}>{user.cantidadPlantas}</Text>
+              <Text style={s.statLabel}>Plantas</Text>
+            </View>
+            <View style={s.statCard}>
+              <MaterialCommunityIcons name="fire" size={20} color={theme.colors.secondary} />
+              <Text style={s.statValue}>{user.racha}</Text>
+              <Text style={s.statLabel}>Racha</Text>
+            </View>
+            <View style={s.statCard}>
+              <MaterialCommunityIcons name="account-group" size={20} color={theme.colors.primary} />
+              <Text style={s.statValue}>{user.amigos}</Text>
+              <Text style={s.statLabel}>Amigos</Text>
+            </View>
+          </View>
 
-      {/* ── Categorías con iconos ────────────────────── */}
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>🌱 CATEGORIAS</Text>
-        <FlatList
-          data={user.categorias}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => <CategoryChip name={item} />}
-        />
-      </View>
+          {/* Bio card */}
+          <View style={s.card}>
+            <Text style={s.cardTitle}>SOBRE MI</Text>
+            <Text style={s.cardBody}>{user.descripcion}</Text>
+          </View>
 
-      {/* ── Planta favorita ──────────────────────────── */}
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>💚 PLANTA FAVORITA</Text>
-        <View style={s.favCard}>
-          <Text style={{ fontSize: 28, marginRight: theme.spacing.md }}>🪴</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={s.favLabel}>Mi favorita</Text>
+          {/* Planta favorita card */}
+          <View style={s.card}>
+            <View style={s.favRow}>
+              <MaterialCommunityIcons
+                name="star"
+                size={18}
+                color={theme.colors.secondary}
+              />
+              <Text style={s.cardTitle}>PLANTA FAVORITA</Text>
+            </View>
             <Text style={s.favName}>{user.plantaFavorita}</Text>
           </View>
         </View>
-      </View>
-
-      {/* ── Info adicional ───────────────────────────── */}
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>📋 INFO</Text>
-        <View style={s.infoRow}>
-          <Text style={{ fontSize: 16, marginRight: theme.spacing.sm }}>🎂</Text>
-          <Text style={s.infoText}>{formattedBirthday}</Text>
-        </View>
-      </View>
-
-      {/* ── Privacidad switch ────────────────────────── */}
-      <View style={s.section}>
-        <View style={s.privacyBox}>
-          <View style={{ flex: 1 }}>
-            <Text style={s.privacyLabel}>🔒 Perfil Privado</Text>
-            <Text style={s.privacyHint}>
-              {user.privacidad
-                ? 'Solo tus amigos ven tu perfil'
-                : 'Tu perfil es publico'}
-            </Text>
+      ) : (
+        /* ── CONFIGURACION ── */
+        <View style={s.settingsContainer}>
+          {/* Toggle tema */}
+          <View style={s.settingRow}>
+            <View style={s.settingInfo}>
+              <MaterialCommunityIcons
+                name={mode === 'dark' ? 'weather-night' : 'white-balance-sunny'}
+                size={18}
+                color={theme.colors.textSecondary}
+              />
+              <View style={s.settingTexts}>
+                <Text style={s.settingLabel}>
+                  Tema {mode === 'dark' ? 'Oscuro' : 'Claro'}
+                </Text>
+                <Text style={s.settingHint}>
+                  {mode === 'dark' ? 'Jardin de noche' : 'Jardin de dia'}
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={mode === 'dark'}
+              onValueChange={toggleTheme}
+              trackColor={{
+                false: theme.colors.border,
+                true: theme.colors.primarySoft,
+              }}
+              thumbColor={mode === 'dark' ? theme.colors.primary : theme.colors.white}
+              accessibilityRole="switch"
+              accessibilityLabel="Cambiar entre tema claro y oscuro"
+            />
           </View>
-          <Switch
-            value={user.privacidad}
-            onValueChange={togglePrivacy}
-            trackColor={{
-              false: theme.colors.border,
-              true: theme.colors.primarySoft,
-            }}
-            thumbColor={user.privacidad ? theme.colors.primary : theme.colors.white}
-            accessibilityRole="switch"
-            accessibilityLabel="Activar o desactivar perfil privado"
-            accessibilityState={{ checked: user.privacidad }}
-          />
-        </View>
-      </View>
 
-      {/* ── Toggle tema claro/oscuro ─────────────────── */}
-      <View style={s.section}>
-        <View style={s.privacyBox}>
-          <View style={{ flex: 1 }}>
-            <Text style={s.privacyLabel}>
-              {mode === 'dark' ? '🌙' : '☀️'} Tema {mode === 'dark' ? 'Oscuro' : 'Claro'}
-            </Text>
-            <Text style={s.privacyHint}>
-              {mode === 'dark'
-                ? 'Jardin de noche — tonos tierra'
-                : 'Jardin de dia — tonos crema'}
-            </Text>
+          {/* Toggle privacidad */}
+          <View style={s.settingRow}>
+            <View style={s.settingInfo}>
+              <MaterialCommunityIcons
+                name={user.privacidad ? 'lock' : 'lock-open-variant'}
+                size={18}
+                color={theme.colors.textSecondary}
+              />
+              <View style={s.settingTexts}>
+                <Text style={s.settingLabel}>Perfil Privado</Text>
+                <Text style={s.settingHint}>
+                  {user.privacidad
+                    ? 'Solo tus amigos ven tu perfil'
+                    : 'Tu perfil es publico'}
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={user.privacidad}
+              onValueChange={togglePrivacy}
+              trackColor={{
+                false: theme.colors.border,
+                true: theme.colors.primarySoft,
+              }}
+              thumbColor={user.privacidad ? theme.colors.primary : theme.colors.white}
+              accessibilityRole="switch"
+              accessibilityLabel="Activar o desactivar perfil privado"
+            />
           </View>
-          <Switch
-            value={mode === 'dark'}
-            onValueChange={toggleTheme}
-            trackColor={{
-              false: theme.colors.border,
-              true: theme.colors.primarySoft,
-            }}
-            thumbColor={mode === 'dark' ? theme.colors.primary : theme.colors.white}
-            accessibilityRole="switch"
-            accessibilityLabel="Cambiar entre tema claro y oscuro"
-            accessibilityState={{ checked: mode === 'dark' }}
-          />
         </View>
-      </View>
-
-      {/* ── Botón Editar Perfil ──────────────────────── */}
-      <View style={{ marginTop: theme.spacing['2xl'], paddingHorizontal: theme.spacing.lg }}>
-        <RetroButton label="EDITAR PERFIL" onPress={handleEditProfile} />
-      </View>
+      )}
     </ScrollView>
   );
 }
 
-// ── Estilos retro pixel art ───────────────────────────────────────────────────
+// ── Estilos ───────────────────────────────────────────────────────────────────
 
 function getStyles(t: AppTheme) {
   return StyleSheet.create({
@@ -292,33 +248,24 @@ function getStyles(t: AppTheme) {
     // ── Header ───────────────────────────────────
     header: {
       alignItems: 'center',
-      paddingTop: 50,
+      paddingTop: 56,
       paddingBottom: t.spacing['2xl'],
       paddingHorizontal: t.spacing.lg,
       backgroundColor: t.colors.surfaceVariant,
       borderBottomWidth: t.borderWidths.thick,
       borderBottomColor: t.colors.border,
     },
-    headerTitle: {
-      fontFamily: t.typography.fontFamily,
-      fontSize: t.typography.sizes.caption,
-      color: t.colors.secondary,
-      textTransform: 'uppercase',
-      letterSpacing: 1,
-      marginBottom: t.spacing.lg,
-    },
 
     // ── Avatar frame pixel art ───────────────────
     avatarFrame: {
-      width: 100,
-      height: 100,
+      width: 88,
+      height: 88,
       borderWidth: t.borderWidths.thick,
       borderColor: t.colors.border,
       borderRadius: t.radius.sm,
       backgroundColor: t.colors.surface,
       overflow: 'hidden',
       marginBottom: t.spacing.md,
-      // Sombra sólida pixel art
       shadowColor: t.colors.shadow,
       shadowOffset: { width: 3, height: 3 },
       shadowOpacity: 1,
@@ -333,8 +280,8 @@ function getStyles(t: AppTheme) {
       position: 'absolute',
       bottom: -2,
       right: -2,
-      width: 28,
-      height: 28,
+      width: 26,
+      height: 26,
       backgroundColor: t.colors.primary,
       borderWidth: t.borderWidths.medium,
       borderColor: t.colors.border,
@@ -344,64 +291,78 @@ function getStyles(t: AppTheme) {
     },
 
     // ── Textos del header ────────────────────────
-    nickname: {
+    displayName: {
       fontFamily: t.typography.fontFamily,
-      fontSize: t.typography.sizes.subtitle,
-      color: t.colors.primary,
+      fontSize: t.typography.sizes.title,
+      color: t.colors.textPrimary,
     },
-    fullName: {
+    handle: {
       fontFamily: t.typography.fontFamilyMono,
       fontSize: t.typography.sizes.caption,
       color: t.colors.textSecondary,
-      marginTop: 2,
-    },
-    bio: {
-      fontFamily: t.typography.fontFamilyMono,
-      fontSize: t.typography.sizes.caption,
-      color: t.colors.textMuted,
-      textAlign: 'center',
-      marginTop: t.spacing.sm,
-      paddingHorizontal: t.spacing.xl,
-      lineHeight: t.typography.sizes.caption * t.typography.lineHeights.relaxed,
+      marginTop: 4,
     },
 
-    // ── Stats bar ────────────────────────────────
-    statsBar: {
+    // ── Toggle compacto (solo iconos) ────────────
+    togglePill: {
       flexDirection: 'row',
+      marginTop: t.spacing.lg,
+      backgroundColor: t.colors.surface,
+      borderWidth: t.borderWidths.thick,
+      borderColor: t.colors.border,
+      borderRadius: t.radius.pill,
+      padding: t.borderWidths.medium,
+      gap: t.borderWidths.medium,
+    },
+    toggleBtn: {
+      width: 36,
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: t.radius.full,
+    },
+    toggleBtnActive: {
+      backgroundColor: t.colors.primary,
+    },
+
+    // ── Info container ───────────────────────────
+    infoContainer: {
+      paddingHorizontal: t.spacing.lg,
+      marginTop: t.spacing.xl,
+      gap: t.spacing.md,
+    },
+
+    // ── Stats grid ───────────────────────────────
+    statsGrid: {
+      flexDirection: 'row',
+      gap: t.spacing.md,
+    },
+    statCard: {
+      flex: 1,
+      alignItems: 'center',
       backgroundColor: t.colors.surface,
       borderWidth: t.borderWidths.thick,
       borderColor: t.colors.border,
       borderRadius: t.radius.md,
-      padding: t.spacing.md,
-      marginHorizontal: t.spacing.lg,
-      marginTop: -t.spacing.xl,
-      justifyContent: 'space-around',
-      alignItems: 'center',
+      paddingVertical: t.spacing.lg,
+      paddingHorizontal: t.spacing.sm,
+      gap: t.spacing.xs,
       ...t.elevation.sm,
     },
-    statDivider: {
-      width: t.borderWidths.medium,
-      height: 28,
-      backgroundColor: t.colors.border,
-    },
-
-    // ── Secciones ────────────────────────────────
-    section: {
-      marginTop: t.spacing['2xl'],
-      paddingHorizontal: t.spacing.lg,
-    },
-    sectionTitle: {
+    statValue: {
       fontFamily: t.typography.fontFamily,
-      fontSize: t.typography.sizes.caption,
+      fontSize: t.typography.sizes.subtitle,
       color: t.colors.textPrimary,
-      letterSpacing: 1,
-      marginBottom: t.spacing.md,
+    },
+    statLabel: {
+      fontFamily: t.typography.fontFamilyMono,
+      fontSize: t.typography.sizes.caption,
+      color: t.colors.textMuted,
+      textTransform: 'uppercase',
     },
 
-    // ── Planta favorita ──────────────────────────
-    favCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
+    // ── Cards genericas ──────────────────────────
+    card: {
       backgroundColor: t.colors.surface,
       borderWidth: t.borderWidths.thick,
       borderColor: t.colors.border,
@@ -409,33 +370,38 @@ function getStyles(t: AppTheme) {
       padding: t.spacing.lg,
       ...t.elevation.sm,
     },
-    favLabel: {
-      fontFamily: t.typography.fontFamilyMono,
+    cardTitle: {
+      fontFamily: t.typography.fontFamily,
       fontSize: t.typography.sizes.overline,
       color: t.colors.textMuted,
-      textTransform: 'uppercase',
+      letterSpacing: 1,
+      marginBottom: t.spacing.sm,
+    },
+    cardBody: {
+      fontFamily: t.typography.fontFamilyMono,
+      fontSize: t.typography.sizes.body,
+      color: t.colors.textPrimary,
+      lineHeight: t.typography.sizes.body * 1.7,
+    },
+    favRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.sm,
+      marginBottom: t.spacing.sm,
     },
     favName: {
       fontFamily: t.typography.fontFamily,
-      fontSize: t.typography.sizes.body,
+      fontSize: t.typography.sizes.subtitle,
       color: t.colors.textPrimary,
-      marginTop: 2,
     },
 
-    // ── Info ─────────────────────────────────────
-    infoRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: t.spacing.xs,
+    // ── Settings container ───────────────────────
+    settingsContainer: {
+      paddingHorizontal: t.spacing.lg,
+      marginTop: t.spacing.xl,
+      gap: t.spacing.md,
     },
-    infoText: {
-      fontFamily: t.typography.fontFamilyMono,
-      fontSize: t.typography.sizes.caption,
-      color: t.colors.textSecondary,
-    },
-
-    // ── Privacidad ───────────────────────────────
-    privacyBox: {
+    settingRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -446,14 +412,23 @@ function getStyles(t: AppTheme) {
       padding: t.spacing.lg,
       ...t.elevation.sm,
     },
-    privacyLabel: {
+    settingInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+      gap: t.spacing.md,
+    },
+    settingTexts: {
+      flex: 1,
+    },
+    settingLabel: {
       fontFamily: t.typography.fontFamily,
-      fontSize: t.typography.sizes.caption,
+      fontSize: t.typography.sizes.overline,
       color: t.colors.textPrimary,
     },
-    privacyHint: {
+    settingHint: {
       fontFamily: t.typography.fontFamilyMono,
-      fontSize: t.typography.sizes.overline,
+      fontSize: t.typography.sizes.caption,
       color: t.colors.textMuted,
       marginTop: 2,
     },

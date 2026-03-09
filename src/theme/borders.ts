@@ -20,10 +20,11 @@
 
 export interface ThemeRadius {
   none: number;   // 0px  — Cuadrado perfecto (bloques, sprites)
-  sm: number;     // 2px  — Sutileza mínima (chips, badges)
+  sm: number;     // 2px  — Sutileza minima (chips, badges)
   md: number;     // 4px  — Inputs, botones (ligeramente redondeado)
-  lg: number;     // 6px  — Cards (sutil, no rompe la estética pixel)
+  lg: number;     // 6px  — Cards (sutil, no rompe la estetica pixel)
   xl: number;     // 8px  — Modals, headers
+  pill: number;   // 16px — Indicador activo M3, pills de navegacion
   full: number;   // 999  — Avatares, FABs circulares
 }
 
@@ -40,6 +41,7 @@ export const sharedRadius: ThemeRadius = {
   md: 4,
   lg: 6,
   xl: 8,
+  pill: 16,
   full: 999,
 };
 

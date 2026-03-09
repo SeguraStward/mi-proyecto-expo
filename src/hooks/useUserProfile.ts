@@ -12,7 +12,7 @@ const MOCK_USER: UserInterface = {
   imagen: 'https://i.pravatar.cc/300?img=47',
   amigos: 128,
   privacidad: false,
-  descripcion: 'Amante de las plantas 🌿 Convirtiendo mi hogar en una selva urbana, una maceta a la vez.',
+  descripcion: 'Amante de las plantas. Convirtiendo mi hogar en una selva urbana, una maceta a la vez.',
   plantaFavorita: 'Monstera Deliciosa',
 };
 

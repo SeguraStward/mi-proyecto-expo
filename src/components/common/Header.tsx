@@ -1,4 +1,4 @@
-import { PlantColors } from '@/src/constants/colors';
+import { useAppTheme } from '@/src/theme';
 import React from 'react';
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
@@ -10,11 +10,21 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ title, subtitle, style, rightElement }) => {
+  const theme = useAppTheme();
+
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }, style]}>
       <View>
-        <Text style={styles.title}>{title}</Text>
-        {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+        <Text style={[styles.title, {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.typography.fontFamily,
+        }]}>{title}</Text>
+        {subtitle && (
+          <Text style={[styles.subtitle, {
+            color: theme.colors.textSecondary,
+            fontFamily: theme.typography.fontFamilyMono,
+          }]}>{subtitle}</Text>
+        )}
       </View>
       {rightElement && <View>{rightElement}</View>}
     </View>
@@ -28,16 +38,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: PlantColors.background,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: PlantColors.textPrimary,
+    fontSize: 18,
+    fontWeight: '400',
+    letterSpacing: 1,
   },
   subtitle: {
-    fontSize: 13,
-    color: PlantColors.textSecondary,
-    marginTop: 2,
+    fontSize: 11,
+    marginTop: 4,
+    letterSpacing: 0.3,
   },
 });

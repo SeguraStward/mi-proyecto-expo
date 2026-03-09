@@ -1,11 +1,11 @@
-import { PlantColors } from '@/src/constants/colors';
+import { useAppTheme } from '@/src/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, type ViewStyle } from 'react-native';
 
 interface TabItem {
   key: string;
   label: string;
-  icon?: string; // emoji o se puede ampliar a un componente de icono
+  icon?: string;
 }
 
 interface TabBarProps {
@@ -15,20 +15,45 @@ interface TabBarProps {
   style?: ViewStyle;
 }
 
+/**
+ * @deprecated Usar BottomNavBar para la navegacion principal.
+ * Este componente se mantiene para usos internos (filtros, segmented control).
+ */
 export const TabBar: React.FC<TabBarProps> = ({ tabs, activeTab, onTabPress, style }) => {
+  const theme = useAppTheme();
+
   return (
-    <View style={[styles.container, style]}>
+    <View style={[
+      styles.container,
+      {
+        backgroundColor: theme.colors.surface,
+        borderColor: theme.colors.border,
+        borderRadius: theme.radius.md,
+        borderWidth: theme.borderWidths.medium,
+      },
+      style,
+    ]}>
       {tabs.map((tab) => {
         const isActive = tab.key === activeTab;
         return (
           <TouchableOpacity
             key={tab.key}
-            style={[styles.tab, isActive && styles.activeTab]}
+            style={[
+              styles.tab,
+              { borderRadius: theme.radius.sm },
+              isActive && { backgroundColor: theme.colors.primaryPale },
+            ]}
             onPress={() => onTabPress(tab.key)}
             activeOpacity={0.7}
           >
-            {tab.icon && <Text style={styles.icon}>{tab.icon}</Text>}
-            <Text style={[styles.label, isActive && styles.activeLabel]}>{tab.label}</Text>
+            <Text style={[
+              styles.label,
+              {
+                color: isActive ? theme.colors.primary : theme.colors.textMuted,
+                fontFamily: theme.typography.fontFamily,
+              },
+              isActive && { fontWeight: '600' as const },
+            ]}>{tab.label}</Text>
           </TouchableOpacity>
         );
       })}
@@ -39,11 +64,7 @@ export const TabBar: React.FC<TabBarProps> = ({ tabs, activeTab, onTabPress, sty
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: PlantColors.surface,
-    borderRadius: 16,
     padding: 4,
-    borderWidth: 1,
-    borderColor: PlantColors.border,
   },
   tab: {
     flex: 1,
@@ -51,22 +72,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 12,
     gap: 4,
   },
-  activeTab: {
-    backgroundColor: PlantColors.primaryPale,
-  },
-  icon: {
-    fontSize: 16,
-  },
   label: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: PlantColors.textMuted,
-  },
-  activeLabel: {
-    color: PlantColors.primary,
-    fontWeight: '600',
+    fontSize: 10,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
 });

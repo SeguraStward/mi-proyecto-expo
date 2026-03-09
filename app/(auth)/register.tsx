@@ -24,6 +24,7 @@ import { AppText } from '@/src/components/ui/AppText';
 import { Input } from '@/src/components/ui/Input';
 import { PrimaryButton } from '@/src/components/ui/PrimaryButton';
 import { useAppTheme } from '@/src/theme/designSystem';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Link, router } from 'expo-router';
 import React from 'react';
 import {
@@ -48,7 +49,12 @@ export default function RegisterScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={[styles.content, { paddingHorizontal: theme.spacing['3xl'] }]}>
-        <AppText style={styles.emoji}>🌱</AppText>
+        <MaterialCommunityIcons
+          name="sprout"
+          size={48}
+          color={theme.colors.primary}
+          style={{ textAlign: 'center', marginBottom: theme.spacing.md }}
+        />
         <AppText preset="title" style={{ textAlign: 'center' }}>
           Crear Cuenta
         </AppText>

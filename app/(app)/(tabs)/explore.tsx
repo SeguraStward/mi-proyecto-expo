@@ -15,6 +15,7 @@
 
 import { AppText, Chip, Input, PlantCard } from '@/src/components/ui';
 import { useAppTheme } from '@/src/theme/designSystem';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import {
     FlatList,
@@ -29,72 +30,72 @@ const plantLibrary = [
   {
     id: '1',
     name: 'Monstera Deliciosa',
-    emoji: '🪴',
+    iconName: 'leaf',
     scientific: 'Monstera deliciosa',
-    difficulty: 'Fácil',
-    light: '☀️ Luz indirecta',
-    water: '💧 Cada 7 días',
+    imageUri: 'https://picsum.photos/seed/monstera-lib/200/300',
+    difficulty: 'Facil',
+    light: 'Luz indirecta',
+    water: 'Cada 7 dias',
     category: 'Interior',
   },
   {
     id: '2',
     name: 'Lavanda',
-    emoji: '💜',
+    iconName: 'flower',
     scientific: 'Lavandula angustifolia',
+    imageUri: 'https://picsum.photos/seed/lavender-lib/200/300',
     difficulty: 'Media',
-    light: '☀️ Sol directo',
-    water: '💧 Cada 10 días',
-    category: 'Aromáticas',
+    light: 'Sol directo',
+    water: 'Cada 10 dias',
+    category: 'Aromaticas',
   },
   {
     id: '3',
     name: 'Cactus San Pedro',
-    emoji: '🌵',
+    iconName: 'cactus',
     scientific: 'Echinopsis pachanoi',
-    difficulty: 'Fácil',
-    light: '☀️ Sol directo',
-    water: '💧 Cada 15 días',
+    imageUri: 'https://picsum.photos/seed/cactus-lib/200/300',
+    difficulty: 'Facil',
+    light: 'Sol directo',
+    water: 'Cada 15 dias',
     category: 'Suculentas',
   },
   {
     id: '4',
     name: 'Pothos',
-    emoji: '🌿',
+    iconName: 'leaf',
     scientific: 'Epipremnum aureum',
-    difficulty: 'Fácil',
-    light: '☀️ Luz baja a indirecta',
-    water: '💧 Cada 7-10 días',
+    imageUri: 'https://picsum.photos/seed/pothos/200/300',
+    difficulty: 'Facil',
+    light: 'Luz baja a indirecta',
+    water: 'Cada 7-10 dias',
     category: 'Interior',
   },
   {
     id: '5',
     name: 'Rosa',
-    emoji: '🌹',
+    iconName: 'flower-tulip',
     scientific: 'Rosa spp.',
-    difficulty: 'Difícil',
-    light: '☀️ Sol directo (6h+)',
-    water: '💧 Cada 2-3 días',
+    imageUri: 'https://picsum.photos/seed/rose-garden/200/300',
+    difficulty: 'Dificil',
+    light: 'Sol directo (6h+)',
+    water: 'Cada 2-3 dias',
     category: 'Exterior',
   },
   {
     id: '6',
     name: 'Albahaca',
-    emoji: '🌱',
+    iconName: 'sprout',
     scientific: 'Ocimum basilicum',
-    difficulty: 'Fácil',
-    light: '☀️ Sol directo',
-    water: '💧 Cada 2 días',
-    category: 'Aromáticas',
+    imageUri: 'https://picsum.photos/seed/basil-herb/200/300',
+    difficulty: 'Facil',
+    light: 'Sol directo',
+    water: 'Cada 2 dias',
+    category: 'Aromaticas',
   },
 ];
 
-const DIFFICULTY_LEVEL: Record<string, string> = {
-  'Fácil': '5',
-  'Media': '15',
-  'Difícil': '25',
-};
-
-const difficulties = ['Todas', 'Fácil', 'Media', 'Difícil'];
+const difficulties = ['Todas', 'Facil', 'Media', 'Dificil'];
 
 export default function ExploreScreen() {
   const theme = useAppTheme();
@@ -119,7 +120,7 @@ export default function ExploreScreen() {
       >
         {/* ── Header ────────────────────────────────────── */}
         <View style={[styles.header, { paddingHorizontal: theme.spacing.lg }]}>
-          <AppText preset="title">📚 EXPLORAR</AppText>
+          <AppText preset="title">EXPLORAR</AppText>
           <AppText
             preset="bodySmall"
             color={theme.colors.textSecondary}
@@ -164,28 +165,33 @@ export default function ExploreScreen() {
           />
         </View>
 
-        {/* ── Lista de plantas (usa PlantCard igual que Jardín) ── */}
+        {/* ── Grid de plantas (2 columnas estilo PictureThis) ── */}
         <View style={{ paddingHorizontal: theme.spacing.lg, marginTop: theme.spacing.xl }}>
           <AppText preset="caption" color={theme.colors.textMuted} style={{ marginBottom: theme.spacing.md }}>
             {filteredPlants.length} planta{filteredPlants.length !== 1 ? 's' : ''} encontrada{filteredPlants.length !== 1 ? 's' : ''}
           </AppText>
 
-          {filteredPlants.map((plant, index) => (
-            <View key={plant.id} style={{ marginBottom: theme.spacing.md }}>
-              <PlantCard
-                name={plant.name}
-                emoji={plant.emoji}
-                description={`${plant.scientific}\n${plant.light}  ·  ${plant.water}`}
-                level={DIFFICULTY_LEVEL[plant.difficulty] ?? '1'}
-                onPress={() => {}}
-                style={{ marginHorizontal: 0 }}
-              />
-            </View>
-          ))}
+          <View style={styles.grid}>
+            {filteredPlants.map((plant) => (
+              <View key={plant.id} style={styles.gridItem}>
+                <PlantCard
+                  name={plant.name}
+                  iconName={plant.iconName}
+                  scientificName={plant.scientific}
+                  imageUri={plant.imageUri}
+                  onPress={() => {}}
+                />
+              </View>
+            ))}
+          </View>
 
           {filteredPlants.length === 0 && (
             <View style={styles.emptyState}>
-              <AppText style={styles.emptyEmoji}>🔍</AppText>
+              <MaterialCommunityIcons
+                name="magnify"
+                size={48}
+                color={theme.colors.textMuted}
+              />
               <AppText
                 preset="body"
                 color={theme.colors.textMuted}
@@ -206,6 +212,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
   header: { paddingTop: 16, paddingBottom: 4 },
   filterSection: { marginTop: 20 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  gridItem: { width: '48%' },
   emptyState: { alignItems: 'center', paddingTop: 40 },
-  emptyEmoji: { fontSize: 48 },
 });

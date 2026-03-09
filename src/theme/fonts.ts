@@ -16,9 +16,14 @@
  *   La fuente pixelada es más pequeña visualmente, por lo que los tamaños
  *   son ligeramente mayores que en una fuente sans-serif convencional.
  *
- * Escala tipográfica (7 niveles):
- *   hero (24px) → title (18px) → subtitle (14px) → body (12px)
- *   → bodySmall (10px) → caption (9px) → overline (8px)
+ * Escala tipográfica fluida (7 niveles — ratio ~1.15):
+ *   hero (24px) → title (20px) → subtitle (16px) → body (15px)
+ *   → bodySmall (14px) → caption (13px) → overline (11px)
+ *
+ * Nota: PressStart2P renderiza más pequeña que su nominal, por lo que
+ * los presets que usan pixel font (hero, title, subtitle, overline)
+ * se ven proporcionalmente más chicos. Body y menores usan Courier New
+ * (mono) para legibilidad en párrafos largos.
  *
  * @see docs/DESIGN_SYSTEM_RETRO.md — Sección A.2 Tipografía
  * ============================================================================
@@ -62,13 +67,13 @@ export const sharedTypography: ThemeTypography = {
   fontFamily: PIXEL_FONT,
   fontFamilyMono: MONO_FONT,
   sizes: {
-    hero: 24,       // Pantallas de bienvenida, títulos grandes
-    title: 18,      // Títulos principales — más pequeño que sans-serif por la fuente pixel
-    subtitle: 14,   // Subtítulos, títulos de sección
-    body: 12,       // Texto principal
-    bodySmall: 10,  // Texto secundario
-    caption: 9,     // Labels, timestamps
-    overline: 8,    // Chips, badges
+    hero: 24,       // Pantallas de bienvenida, titulos grandes (pixel)
+    title: 20,      // Titulos principales (pixel)
+    subtitle: 16,   // Subtitulos, titulos de seccion (pixel)
+    body: 15,       // Texto principal legible (mono)
+    bodySmall: 14,  // Texto secundario (mono)
+    caption: 13,    // Labels, timestamps, metadata (mono)
+    overline: 11,   // Chips, badges, tiny labels (pixel)
   },
   weights: {
     regular: '400',
@@ -77,7 +82,7 @@ export const sharedTypography: ThemeTypography = {
     bold: '700',
   },
   lineHeights: {
-    tight: 1.4,     // Más espacio que sans-serif porque pixel font es densa
+    tight: 1.4,     // Mas espacio que sans-serif porque pixel font es densa
     normal: 1.6,
     relaxed: 1.8,
   },

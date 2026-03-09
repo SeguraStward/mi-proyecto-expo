@@ -22,6 +22,7 @@
 import { PlantCard, RetroButton } from '@/src/components/ui';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
@@ -36,7 +37,9 @@ import {
 interface PlantItem {
   id: string;
   name: string;
-  emoji: string;
+  iconName: string;
+  scientificName: string;
+  imageUri: string;
   description: string;
   level: string;
 }
@@ -45,42 +48,54 @@ const MOCK_PLANTS: PlantItem[] = [
   {
     id: '1',
     name: 'Monstera',
-    emoji: '🌿',
+    iconName: 'leaf',
+    scientificName: 'Monstera deliciosa',
+    imageUri: 'https://picsum.photos/seed/monstera/200/300',
     description: 'Planta tropical de hojas fenestradas. Resistente a sombra parcial.',
     level: '12',
   },
   {
     id: '2',
     name: 'Cactus Barril',
-    emoji: '🌵',
-    description: 'Suculenta esférica del desierto. Casi indestructible.',
+    iconName: 'cactus',
+    scientificName: 'Echinocactus grusonii',
+    imageUri: 'https://picsum.photos/seed/cactus-barrel/200/300',
+    description: 'Suculenta esferica del desierto. Casi indestructible.',
     level: '8',
   },
   {
     id: '3',
     name: 'Lavanda',
-    emoji: '💜',
-    description: 'Aromática mediterránea. Atrae polinizadores y repele plagas.',
+    iconName: 'flower',
+    scientificName: 'Lavandula angustifolia',
+    imageUri: 'https://picsum.photos/seed/lavender/200/300',
+    description: 'Aromatica mediterranea. Atrae polinizadores y repele plagas.',
     level: '15',
   },
   {
     id: '4',
     name: 'Helecho Real',
-    emoji: '🌱',
+    iconName: 'sprout',
+    scientificName: 'Osmunda regalis',
+    imageUri: 'https://picsum.photos/seed/fern-royal/200/300',
     description: 'Helecho antiguo de frondas elegantes. Necesita humedad alta.',
     level: '20',
   },
   {
     id: '5',
     name: 'Girasol',
-    emoji: '🌻',
-    description: 'Heliotropa anual. Sigue la dirección del sol durante el día.',
+    iconName: 'white-balance-sunny',
+    scientificName: 'Helianthus annuus',
+    imageUri: 'https://picsum.photos/seed/sunflower/200/300',
+    description: 'Heliotropa anual. Sigue la direccion del sol durante el dia.',
     level: '5',
   },
   {
     id: '6',
-    name: 'Bonsái Ficus',
-    emoji: '🌳',
+    name: 'Bonsai Ficus',
+    iconName: 'tree',
+    scientificName: 'Ficus retusa',
+    imageUri: 'https://picsum.photos/seed/bonsai-ficus/200/300',
     description: 'Miniatura viva. Requiere poda y paciencia de nivel experto.',
     level: '30',
   },
@@ -90,7 +105,7 @@ const MOCK_PLANTS: PlantItem[] = [
 
 interface TipItem {
   id: string;
-  icon: string;
+  iconName: string;
   title: string;
   body: string;
 }
@@ -98,25 +113,25 @@ interface TipItem {
 const GARDEN_TIPS: TipItem[] = [
   {
     id: 't1',
-    icon: '💧',
+    iconName: 'water-outline',
     title: 'Riego matutino',
     body: 'Riega tus plantas al amanecer para evitar la evaporacion rapida.',
   },
   {
     id: 't2',
-    icon: '🌱',
+    iconName: 'sprout-outline',
     title: 'Tierra nutritiva',
     body: 'Agrega compost casero cada 2 semanas para mantener nutrientes.',
   },
   {
     id: 't3',
-    icon: '☀️',
+    iconName: 'white-balance-sunny',
     title: 'Luz adecuada',
     body: 'Asegurate de que cada planta tenga la luz que necesita segun su tipo.',
   },
   {
     id: 't4',
-    icon: '🪴',
+    iconName: 'flower-tulip-outline',
     title: 'Trasplante',
     body: 'Si las raices salen por los agujeros, es hora de una maceta mas grande.',
   },
@@ -135,7 +150,7 @@ export default function GardenHome() {
       params: {
         id: plant.id,
         name: plant.name,
-        emoji: plant.emoji,
+        iconName: plant.iconName,
         description: plant.description,
         level: plant.level,
       },
@@ -144,8 +159,8 @@ export default function GardenHome() {
 
   const renderHeader = () => (
     <View style={s.header}>
-      {/* Título pixel art */}
-      <Text style={s.title}>🌿 MI JARDIN</Text>
+      {/* Titulo pixel art */}
+      <Text style={s.title}>MI JARDIN</Text>
       <Text style={s.subtitle}>Inventario de plantas</Text>
 
       {/* Stats bar estilo RPG */}
@@ -177,9 +192,14 @@ export default function GardenHome() {
 
   const renderEmpty = () => (
     <View style={s.empty}>
-      <Text style={s.emptyEmoji}>🌱</Text>
-      <Text style={s.emptyText}>Tu jardín está vacío</Text>
-      <Text style={s.emptyHint}>Añade tu primera planta</Text>
+      <MaterialCommunityIcons
+        name="sprout"
+        size={48}
+        color={theme.colors.textMuted}
+        style={{ marginBottom: theme.spacing.lg }}
+      />
+      <Text style={s.emptyText}>Tu jardin esta vacio</Text>
+      <Text style={s.emptyHint}>Anade tu primera planta</Text>
     </View>
   );
 
@@ -189,13 +209,13 @@ export default function GardenHome() {
       <View style={s.soilStripe} />
 
       <View style={s.tipsContainer}>
-        <Text style={s.tipsTitle}>🌍 CONSEJOS DE JARDINERO</Text>
+        <Text style={s.tipsTitle}>CONSEJOS DE JARDINERO</Text>
         <Text style={s.tipsSubtitle}>Tips del dia para cuidar tu jardin</Text>
 
         {GARDEN_TIPS.map((tip) => (
           <View key={tip.id} style={s.tipCard}>
             <View style={s.tipIconWrapper}>
-              <Text style={s.tipIcon}>{tip.icon}</Text>
+              <MaterialCommunityIcons name={tip.iconName as any} size={20} color="#FFF8E1" />
             </View>
             <View style={s.tipContent}>
               <Text style={s.tipTitle}>{tip.title}</Text>
@@ -216,22 +236,22 @@ export default function GardenHome() {
     <View style={s.container}>
       <FlatList
         data={MOCK_PLANTS}
+        numColumns={2}
         keyExtractor={(item) => item.id}
+        columnWrapperStyle={s.gridRow}
         renderItem={({ item }) => (
           <PlantCard
             name={item.name}
-            emoji={item.emoji}
-            description={item.description}
-            level={item.level}
+            iconName={item.iconName}
+            scientificName={item.scientificName}
+            imageUri={item.imageUri}
             onPress={() => handlePlantPress(item)}
-            style={s.card}
           />
         )}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderTipsFooter}
         contentContainerStyle={s.listContent}
-        ItemSeparatorComponent={() => <View style={s.separator} />}
         showsVerticalScrollIndicator={false}
         accessibilityRole="list"
       />
@@ -311,21 +331,15 @@ function getStyles(t: AppTheme) {
     },
 
     // ── Lista ────────────────────────────────────
-    card: {
-      marginHorizontal: 0,
-    },
-    separator: {
-      height: t.spacing.md,
+    gridRow: {
+      gap: t.spacing.md,
+      marginBottom: t.spacing.md,
     },
 
     // ── Empty state ──────────────────────────────
     empty: {
       alignItems: 'center',
       paddingVertical: t.spacing['5xl'],
-    },
-    emptyEmoji: {
-      fontSize: 48,
-      marginBottom: t.spacing.lg,
     },
     emptyText: {
       fontFamily: t.typography.fontFamily,
@@ -394,9 +408,6 @@ function getStyles(t: AppTheme) {
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: t.spacing.md,
-    },
-    tipIcon: {
-      fontSize: 20,
     },
     tipContent: {
       flex: 1,

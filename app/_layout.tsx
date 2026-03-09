@@ -22,22 +22,22 @@ function RootNavigator() {
         ...DarkTheme,
         colors: {
           ...DarkTheme.colors,
-          background: '#1A120B',  // Tierra oscura
-          card: '#1B3A1B',       // Verde oscuro (cards)
-          border: '#A1887F',     // Cerca de madera
-          primary: '#66BB6A',    // Verde esmeralda
-          text: '#F1F8E9',       // Verde blanquecino
+          background: '#1C1410',  // Suelo nocturno
+          card: '#2C231A',       // Panel madera oscura
+          border: '#7B6B52',     // Madera iluminada
+          primary: '#7BC67E',    // Esmeralda luna
+          text: '#F2E8D5',       // Luz de luna calida
         },
       }
     : {
         ...DefaultTheme,
         colors: {
           ...DefaultTheme.colors,
-          background: '#D7CCC8',  // Tierra media
-          card: '#C8E6C9',       // Verde suave (cards)
-          border: '#2E7D32',     // Verde bosque (borde)
-          primary: '#2E7D32',    // Verde bosque
-          text: '#1B0F0A',       // Café casi negro
+          background: '#FEFAE0',  // Pergamino
+          card: '#F0E6CE',       // Papel envejecido
+          border: '#386641',     // Verde bosque
+          primary: '#386641',    // Bosque profundo
+          text: '#2B1D0E',       // Tinta oscura
         },
       };
 

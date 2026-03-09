@@ -1,24 +1,19 @@
 /**
  * ============================================================================
- * PlantCard — Tarjeta de planta estilo pixel art
+ * PlantCard — Filled Card estilo Material Design 3
  * ============================================================================
  *
- * Propósito:
- *   Contenedor tipo "item de inventario RPG" con borde grueso pixelado,
- *   fondo surface y sombra sólida. Pensado para mostrar una planta en
- *   listas o grids con estética 8-bit.
+ * Layout:
+ *   Imagen arriba (~65%) + bloque de texto abajo (~35%) con fondo surface.
+ *   El texto nunca se superpone a la imagen.
+ *
+ * Jerarquia visual:
+ *   1. Nombre de planta   — pixel font, textPrimary, bodySmall
+ *   2. Nombre cientifico  — mono font, textSecondary, overline, italica
  *
  * Accesibilidad:
  *   - accessibilityRole="button" (si es presionable)
  *   - accessibilityLabel descriptivo
- *
- * Uso:
- *   <PlantCard
- *     name="Monstera"
- *     emoji="🌿"
- *     description="Planta tropical de hojas grandes"
- *     onPress={() => router.push('/plant/1')}
- *   />
  *
  * @see src/theme/index.ts
  * ============================================================================
@@ -26,8 +21,10 @@
 
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import {
+    Image,
     Pressable,
     StyleSheet,
     Text,
@@ -39,14 +36,16 @@ import {
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 export interface PlantCardProps {
-  /** Nombre de la planta */
+  /** Nombre comun de la planta */
   name: string;
-  /** Emoji o icono representativo */
-  emoji?: string;
-  /** Descripción corta */
-  description?: string;
-  /** Nivel / dificultad (RPG-style) */
-  level?: string;
+  /** Nombre cientifico (italica, debajo del nombre) */
+  scientificName?: string;
+  /** URI de la imagen de la planta */
+  imageUri?: string;
+  /** Nombre del icono MaterialCommunityIcons (fallback si no hay imageUri) */
+  iconName?: string;
+  /** Color del icono (por defecto: primary del tema) */
+  iconColor?: string;
   /** Callback al presionar la tarjeta */
   onPress?: () => void;
   /** Estilos adicionales */
@@ -59,39 +58,46 @@ export interface PlantCardProps {
 
 export function PlantCard({
   name,
-  emoji = '🌱',
-  description,
-  level,
+  scientificName,
+  imageUri,
+  iconName = 'leaf',
+  iconColor,
   onPress,
   style,
   accessibilityLabel,
 }: PlantCardProps) {
   const theme = useAppTheme();
   const s = getStyles(theme);
+  const resolvedIconColor = iconColor ?? theme.colors.primary;
 
   const content = (
     <>
-      {/* Fila superior: emoji + nombre + nivel */}
-      <View style={s.header}>
-        <Text style={s.emoji}>{emoji}</Text>
-        <View style={s.headerText}>
-          <Text style={s.name} numberOfLines={1}>
-            {name}
-          </Text>
-          {level && <Text style={s.level}>Lv. {level}</Text>}
-        </View>
+      {/* Bloque de imagen (~65%) */}
+      <View style={s.imageBlock}>
+        {imageUri ? (
+          <Image
+            source={{ uri: imageUri }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+            accessibilityLabel={`Foto de ${name}`}
+          />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, s.iconFallback]}>
+            <MaterialCommunityIcons
+              name={iconName as any}
+              size={40}
+              color={resolvedIconColor}
+            />
+          </View>
+        )}
       </View>
 
-      {/* Descripción */}
-      {description && (
-        <Text style={s.description} numberOfLines={2}>
-          {description}
-        </Text>
-      )}
-
-      {/* Barra decorativa inferior (estilo barra de vida RPG) */}
-      <View style={s.hpBarContainer}>
-        <View style={s.hpBarFill} />
+      {/* Bloque de texto — fondo solido, nunca sobre la imagen */}
+      <View style={s.textBlock}>
+        <Text style={s.name}>{name}</Text>
+        {scientificName && (
+          <Text style={s.scientific}>{scientificName}</Text>
+        )}
       </View>
     </>
   );
@@ -128,90 +134,49 @@ export function PlantCard({
 function getStyles(t: AppTheme) {
   return StyleSheet.create({
     container: {
-      backgroundColor: t.colors.surface,
+      flex: 1,
       borderWidth: t.borderWidths.thick,
       borderColor: t.colors.border,
       borderRadius: t.radius.md,
-      padding: t.spacing.lg,
-      // Sombra sólida pixel art
+      overflow: 'hidden',
+      backgroundColor: t.colors.surface,
       ...t.elevation.sm,
     },
 
     containerPressed: {
-      transform: [{ translateX: 2 }, { translateY: 2 }],
-      shadowOpacity: 0,
-      elevation: 0,
+      transform: [{ scale: 0.97 }],
       borderColor: t.colors.primary,
     },
 
-    // ── Header ───────────────────────────────────
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: t.spacing.md,
-      marginBottom: t.spacing.sm,
-    },
-    emoji: {
-      fontSize: 28,
-      // Fondo tipo slot de inventario RPG
-      backgroundColor: t.colors.surfaceVariant,
-      borderWidth: t.borderWidths.medium,
-      borderColor: t.colors.border,
-      borderRadius: t.radius.sm,
-      width: 44,
-      height: 44,
-      textAlign: 'center',
-      lineHeight: 42,
+    // ── Imagen (parte superior) ──────────────────
+    imageBlock: {
+      aspectRatio: 1,
       overflow: 'hidden',
     },
-    headerText: {
-      flex: 1,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+
+    iconFallback: {
+      backgroundColor: t.colors.surfaceVariant,
       alignItems: 'center',
+      justifyContent: 'center',
     },
+
+    // ── Texto (parte inferior, fondo solido) ─────
+    textBlock: {
+      padding: t.spacing.md,
+      backgroundColor: t.colors.surface,
+    },
+
     name: {
       fontFamily: t.typography.fontFamily,
-      fontSize: t.typography.sizes.body,
+      fontSize: t.typography.sizes.bodySmall,
       color: t.colors.textPrimary,
-      flex: 1,
     },
-    level: {
+    scientific: {
       fontFamily: t.typography.fontFamilyMono,
-      fontSize: t.typography.sizes.caption,
-      color: t.colors.secondary,
-      backgroundColor: t.colors.surfaceVariant,
-      borderWidth: t.borderWidths.thin,
-      borderColor: t.colors.border,
-      borderRadius: t.radius.sm,
-      paddingHorizontal: t.spacing.sm,
-      paddingVertical: 2,
-      overflow: 'hidden',
-    },
-
-    // ── Descripción ──────────────────────────────
-    description: {
-      fontFamily: t.typography.fontFamilyMono,
-      fontSize: t.typography.sizes.caption,
+      fontSize: t.typography.sizes.overline,
       color: t.colors.textSecondary,
-      lineHeight: t.typography.sizes.caption * t.typography.lineHeights.relaxed,
-      marginBottom: t.spacing.md,
-    },
-
-    // ── Barra de vida decorativa ─────────────────
-    hpBarContainer: {
-      height: 6,
-      backgroundColor: t.colors.surfaceVariant,
-      borderWidth: t.borderWidths.thin,
-      borderColor: t.colors.border,
-      borderRadius: t.radius.none,
-      overflow: 'hidden',
-    },
-    hpBarFill: {
-      height: '100%',
-      width: '80%',
-      backgroundColor: t.colors.primary,
-      borderRadius: 0,
+      fontStyle: 'italic',
+      marginTop: 2,
     },
   });
 }

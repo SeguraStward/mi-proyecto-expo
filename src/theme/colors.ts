@@ -64,96 +64,97 @@ export interface ThemeColors {
   overlay: string;
 }
 
-// ── Light Mode — "Jardín de Día" ─────────────────────────────────────────────
+// ── Light Mode — "Primavera en la granja" ────────────────────────────────────
 //
-// Fondo = tierra cálida clara, cards = verde fresco, acentos = sol amarillo,
-// bordes = cercas blancas del jardín.
+// Fondo = pergamino calido (estetica Stardew Valley UI),
+// cards = papel envejecido, acentos = cosecha ambar,
+// bordes = cercas verdes del jardin.
 //
 
 export const lightColors: ThemeColors = {
-  // 🌿 Verde = plantas, botones, CTAs
-  primary: '#2E7D32',        // Verde bosque (botones principales)
-  primaryLight: '#4CAF50',   // Verde medio (hover, iconos activos)
-  primarySoft: '#A5D6A7',    // Verde medio suave (fondo de cards)
-  primaryPale: '#C8E6C9',    // Verde pálido (estados hover)
-  pressed: '#1B5E20',        // Verde oscuro al presionar
-  secondary: '#F9A825',      // 🌞 Amarillo sol (acentos, badges)
+  // Verdes — vegetacion, botones, CTAs
+  primary: '#386641',        // Bosque profundo (botones principales)
+  primaryLight: '#6A994E',   // Verde pradera (hover, iconos activos)
+  primarySoft: '#B7D8A0',    // Hoja primavera (fondos suaves)
+  primaryPale: '#DCE8D2',    // Verde palido (indicador activo M3)
+  pressed: '#2D5233',        // Bosque oscuro al presionar
+  secondary: '#BC6C25',      // Madera calida / cosecha (acentos, badges)
 
-  // 🟤 Café/tierra = fondo del jardín
-  background: '#D7CCC8',     // Tierra media (la parcela del jardín)
-  surface: '#C8E6C9',        // Verde suave notorio (cards = las plantas)
-  surfaceVariant: '#FFF8E1', // Amarillo crema (secciones alternativas = luz)
+  // Fondos — pergamino calido (estetica Stardew Valley)
+  background: '#FEFAE0',     // Pergamino (fondo general)
+  surface: '#F0E6CE',        // Papel envejecido (cards — distincion visible)
+  surfaceVariant: '#E6DBC4', // Papel profundo (secciones alternativas)
 
-  // Texto — legible sobre tierra y verde
-  textPrimary: '#1B0F0A',    // Café casi negro (máxima legibilidad)
-  textSecondary: '#3E2723',  // Café oscuro
-  textMuted: '#5D4037',      // Café medio
+  // Texto — legible sobre pergamino y papel (WCAG AA verificado)
+  textPrimary: '#2B1D0E',    // Tinta oscura (15.5:1 sobre fondo)
+  textSecondary: '#594A3C',  // Cafe medio (8.1:1 sobre fondo)
+  textMuted: '#6E5F50',      // Madera gastada (5.8:1 — cumple AA)
   textOnPrimary: '#FFFFFF',  // Blanco sobre verde
 
-  // 🌿 Bordes verdes = tallos y ramas del jardín
-  border: '#2E7D32',         // Verde bosque (borde tipo sprite)
-  divider: '#A5D6A7',        // Verde medio (caminos entre plantas)
+  // Bordes — cercas de jardin pixel art
+  border: '#386641',         // Verde bosque (borde tipo sprite)
+  divider: '#D4CCBA',        // Divisor sutil calido
 
-  success: '#43A047',
-  warning: '#FFB300',        // Sol ámbar (moneda RPG)
-  error: '#E53935',          // Rojo retro
-  info: '#1E88E5',           // Cielo
-  disabled: '#BCAAA4',       // Tierra seca
+  success: '#386641',        // Verde exito
+  warning: '#DDA15E',        // Ambar cosecha
+  error: '#AE2012',          // Rojo profundo (6.7:1 sobre fondo)
+  info: '#457B9D',           // Azul cielo
+  disabled: '#C5B9A8',       // Madera destenida
 
-  // Chips = plantas pequeñas
-  chipBackground: '#A5D6A7', // Verde medio suave
-  chipText: '#1B5E20',       // Verde oscuro
-  chipBorder: '#2E7D32',     // Verde bosque borde
+  // Chips — hojas pequenas
+  chipBackground: '#DCE8D2', // Verde palido
+  chipText: '#386641',       // Verde bosque
+  chipBorder: '#6A994E',     // Verde pradera
 
   white: '#FFFFFF',
   black: '#000000',
-  shadow: '#3E2723',         // Sombra tierra (pixel art sólido)
-  overlay: '#3E272380',
+  shadow: '#2B1D0E',         // Sombra tierra solida (pixel art)
+  overlay: '#2B1D0E80',
 };
 
-// ── Dark Mode — "Jardín de Noche" ────────────────────────────────────────────
+// ── Dark Mode — "Noche estrellada en la granja" ─────────────────────────────
 //
-// Fondo = tierra oscura profunda, cards = verde oscuro, acentos = luciérnagas
-// amarillas, bordes = cercas de madera clara bajo la luna.
+// Fondo = suelo nocturno profundo, cards = panel de madera oscura,
+// acentos = oro de linterna calida, bordes = cercas bajo la luna.
 //
 
 export const darkColors: ThemeColors = {
-  // 🌿 Verde = plantas bajo la luna
-  primary: '#66BB6A',        // Verde esmeralda brillante
-  primaryLight: '#81C784',   // Verde claro (hover)
-  primarySoft: '#1B5E20',    // Verde bosque profundo
-  primaryPale: '#0D3B0D',    // Verde casi negro
-  pressed: '#A5D6A7',        // Verde claro al presionar
-  secondary: '#FFD54F',      // 🌙 Amarillo luciérnaga (acentos nocturnos)
+  // Verdes — vegetacion bajo la luna
+  primary: '#7BC67E',        // Esmeralda brillante (luna)
+  primaryLight: '#9ED8A0',   // Verde resplandor claro
+  primarySoft: '#2A5C2F',    // Bosque profundo (indicador oscuro)
+  primaryPale: '#1E3D22',    // Verde muy oscuro
+  pressed: '#A8E0AA',        // Verde brillante al presionar
+  secondary: '#E8B86D',      // Oro de linterna calida (acentos)
 
-  // 🟤 Tierra profunda de noche
-  background: '#1A120B',     // Tierra oscura (noche de jardín)
-  surface: '#1B3A1B',        // Verde muy oscuro (cards = plantas nocturnas)
-  surfaceVariant: '#2D1F14', // Café oscuro (secciones alternativas)
+  // Fondos — tierra nocturna profunda
+  background: '#1C1410',     // Suelo nocturno (jardin de noche)
+  surface: '#2C231A',        // Panel de madera oscura (cards)
+  surfaceVariant: '#382E22', // Madera ligeramente mas clara
 
-  // Texto — legible en la oscuridad
-  textPrimary: '#F1F8E9',    // Verde blanquecino (hojas a la luz de luna)
-  textSecondary: '#C8E6C9',  // Verde claro
-  textMuted: '#8D6E63',      // Café medio (tierra lejana)
-  textOnPrimary: '#0D3B0D',  // Verde muy oscuro sobre verde brillante
+  // Texto — legible en la oscuridad (WCAG AA verificado)
+  textPrimary: '#F2E8D5',    // Luz de luna calida (15.1:1 sobre fondo)
+  textSecondary: '#C8BA9F',  // Pergamino iluminado (9.7:1 sobre fondo)
+  textMuted: '#A49585',      // Madera distante (4.7:1 — cumple AA)
+  textOnPrimary: '#1C1410',  // Oscuro sobre verde brillante
 
-  // ⬜ Cercas de madera clara bajo la luna
-  border: '#A1887F',         // Madera clara (cercas iluminadas)
-  divider: '#4E342E',        // Madera oscura
+  // Bordes — cercas de madera bajo la luna
+  border: '#7B6B52',         // Madera iluminada
+  divider: '#3D3225',        // Madera oscura divisor
 
-  success: '#66BB6A',
-  warning: '#FFD54F',        // Luciérnaga dorada
-  error: '#EF5350',
-  info: '#42A5F5',           // Cielo nocturno
-  disabled: '#4E342E',       // Tierra seca nocturna
+  success: '#7BC67E',        // Verde luna
+  warning: '#E8B86D',        // Oro linterna
+  error: '#F07167',          // Rojo calido
+  info: '#64B5F6',           // Cielo nocturno
+  disabled: '#4E4035',       // Madera oscura inactiva
 
-  // Chips = brotes nocturnos
-  chipBackground: '#1B5E20', // Verde bosque
-  chipText: '#A5D6A7',       // Verde claro
-  chipBorder: '#2E7D32',     // Verde medio
+  // Chips — brotes nocturnos
+  chipBackground: '#2A5C2F', // Bosque profundo
+  chipText: '#9ED8A0',       // Verde claro
+  chipBorder: '#7BC67E',     // Verde luna
 
   white: '#FFFFFF',
   black: '#000000',
-  shadow: '#000000',
+  shadow: '#000000',         // Sombra nocturna
   overlay: '#000000AA',
 };

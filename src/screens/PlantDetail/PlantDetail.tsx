@@ -24,6 +24,7 @@
 import { RetroButton } from '@/src/components/ui';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import {
@@ -69,7 +70,7 @@ export default function PlantDetail() {
   const params = useLocalSearchParams<{
     id: string;
     name: string;
-    emoji: string;
+    iconName: string;
     description: string;
     level: string;
   }>();
@@ -87,9 +88,15 @@ export default function PlantDetail() {
         style={s.backButton}
       />
 
-      {/* ── Ficha principal (sprite box) ──────── */}
+      {/* -- Ficha principal (sprite box) -- */}
       <View style={s.spriteBox}>
-        <Text style={s.spriteEmoji}>{params.emoji ?? '🌱'}</Text>
+        <View style={s.spriteIconSlot}>
+          <MaterialCommunityIcons
+            name={(params.iconName as any) ?? 'leaf'}
+            size={36}
+            color={theme.colors.primary}
+          />
+        </View>
         <View style={s.spriteInfo}>
           <Text style={s.spriteName}>{params.name ?? 'Planta'}</Text>
           <Text style={s.spriteLevel}>Lv. {params.level ?? '1'}</Text>
@@ -117,7 +124,7 @@ export default function PlantDetail() {
 
       {/* ── Consejos (estilo tierra/café) ──── */}
       <View style={s.consoleBox}>
-        <Text style={s.consoleTitle}>{'🌱 CONSEJOS'}</Text>
+        <Text style={s.consoleTitle}>{'CONSEJOS'}</Text>
         {tips.map((tip, i) => (
           <Text key={i} style={s.consoleLine}>
             {'•'} {tip}
@@ -128,12 +135,12 @@ export default function PlantDetail() {
       {/* ── Acciones ──────────────────────────── */}
       <View style={s.actions}>
         <RetroButton
-          label="💧 Regar"
+          label="Regar"
           onPress={() => {}}
           style={s.actionButton}
         />
         <RetroButton
-          label="📸 Foto"
+          label="Foto"
           variant="outlined"
           onPress={() => {}}
           style={s.actionButton}
@@ -204,17 +211,15 @@ function getStyles(t: AppTheme) {
       gap: t.spacing.lg,
       ...t.elevation.md,
     },
-    spriteEmoji: {
-      fontSize: 48,
+    spriteIconSlot: {
       backgroundColor: t.colors.surfaceVariant,
       borderWidth: t.borderWidths.medium,
       borderColor: t.colors.border,
       borderRadius: t.radius.sm,
       width: 72,
       height: 72,
-      textAlign: 'center',
-      lineHeight: 70,
-      overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     spriteInfo: {
       flex: 1,

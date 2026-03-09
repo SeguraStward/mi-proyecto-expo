@@ -6,7 +6,7 @@
  * Propósito:
  *   Componente de texto reutilizable que aplica automáticamente los presets
  *   tipográficos definidos en el Design System (hero, title, subtitle, body,
- *   bodySmall, caption, overline).
+ *   bodySmall, caption, overline). Escala fluida: 24→20→16→15→14→13→11.
  *
  * Uso:
  *   <AppText preset="title">Mi Título</AppText>
@@ -50,21 +50,20 @@ interface AppTextProps extends TextProps {
 
 /**
  * Mapea cada preset a su estilo tipográfico.
- * Los valores vienen del tema pero pesos y line-heights son fijos.
- */
-/**
- * Mapea cada preset a su estilo tipográfico.
- * Hero/Title/Subtitle usan la fuente pixel (Press Start 2P).
+ * Hero/Title/Subtitle/Overline usan la fuente pixel (Press Start 2P).
  * Body y menores usan la fuente mono (Courier New) para legibilidad.
+ *
+ * Escala fluida — ratio ~1.15 entre niveles adyacentes:
+ *   hero(24) → title(20) → subtitle(16) → body(15) → bodySmall(14) → caption(13) → overline(11)
  */
 const presetStyles: Record<TextPreset, TextStyle> = {
-  hero:      { fontSize: 24, fontWeight: '400', lineHeight: 24 * 1.6 },
-  title:     { fontSize: 18, fontWeight: '400', lineHeight: 18 * 1.6 },
-  subtitle:  { fontSize: 14, fontWeight: '400', lineHeight: 14 * 1.5 },
-  body:      { fontSize: 12, fontWeight: '400', lineHeight: 12 * 1.8 },
-  bodySmall: { fontSize: 11, fontWeight: '400', lineHeight: 11 * 1.6 },
-  caption:   { fontSize: 10, fontWeight: '400', lineHeight: 10 * 1.5 },
-  overline:  { fontSize: 9,  fontWeight: '400', lineHeight: 9  * 1.5 },
+  hero:      { fontSize: 24, fontWeight: '400', lineHeight: 24 * 1.6, letterSpacing: 2 },
+  title:     { fontSize: 20, fontWeight: '400', lineHeight: 20 * 1.5, letterSpacing: 1.5 },
+  subtitle:  { fontSize: 16, fontWeight: '400', lineHeight: 16 * 1.5, letterSpacing: 1 },
+  body:      { fontSize: 15, fontWeight: '400', lineHeight: 15 * 1.7, letterSpacing: 0.3 },
+  bodySmall: { fontSize: 14, fontWeight: '400', lineHeight: 14 * 1.6, letterSpacing: 0.3 },
+  caption:   { fontSize: 13, fontWeight: '400', lineHeight: 13 * 1.5, letterSpacing: 0.3 },
+  overline:  { fontSize: 11, fontWeight: '400', lineHeight: 11 * 1.5, letterSpacing: 0.5 },
 };
 
 /** Presets que usan pixel font (headings) vs mono (body) */
