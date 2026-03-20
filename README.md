@@ -98,3 +98,41 @@ docker compose exec app npx expo install expo-font
 
 Si experimentas errores como `EACCES: permission denied` al intentar guardar archivos como `expo-env.d.ts`, significa que esos archivos se crearon con permisos del contenedor (root). 
 Para solucionarlo, nunca inicies `npx expo start` fuera del contenedor, asegúrate siempre de usar el prefijo `docker compose exec app` como se indicó arriba.
+
+---
+
+## Migracion a Firebase (Marketplace de Plantas)
+
+Se agrego una propuesta completa para migrar datos y logica a Firebase antes de construir mas pantallas.
+
+### Documentacion del modelo de base de datos
+
+- `docs/FIREBASE_DATABASE_MARKETPLACE.md`
+
+Incluye:
+
+- colecciones principales de Firestore
+- campos recomendados para comprador y empresa
+- ficha botanica de plantas con campos de cuidado
+- feed social tipo Instagram
+- relacion social con nombre tematico `companerosDeHuerto`
+- indices y reglas de negocio
+
+### Datos semilla JSON
+
+- `backend/data/firebase_seed_data.json`
+
+### Backend Python para subir datos a Firestore
+
+- `backend/firebase_seed/README.md`
+- `backend/firebase_seed/seed_firestore.py`
+
+Resumen rapido:
+
+```bash
+cd backend/firebase_seed
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python seed_firestore.py --credentials ./serviceAccountKey.json
+```

@@ -18,8 +18,12 @@ services:
     tty: true
     environment:
       - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
-      # OPCIÓN A: Usa tunnel (recomendado, más simple)
-      # Descomenta la siguiente línea y comenta la de REACT_NATIVE_PACKAGER_HOSTNAME
-      # - EXPO_TUNNEL=true
-      # OPCIÓN B: Usa IP local (reemplaza con tu IP real de red Wi-Fi: hostname -I)
-      - REACT_NATIVE_PACKAGER_HOSTNAME=192.168.0.105
+
+  seed:
+    build:
+      context: .
+      dockerfile: backend/firebase_seed/Dockerfile
+    working_dir: /workspace/backend/firebase_seed
+    volumes:
+      - .:/workspace
+    tty: true
