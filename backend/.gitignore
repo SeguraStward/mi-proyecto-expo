@@ -1,0 +1,14 @@
+# Backend local secrets
+# Firebase service account keys
+/data/*firebase-adminsdk*.json
+/data/serviceAccountKey.json
+
+# Firebase seed local environment
+/firebase_seed/.env
+/firebase_seed/.env.local
+
+# Python virtual environments and cache
+/.venv/
+/firebase_seed/.venv/
+**/__pycache__/
+*.py[cod]
