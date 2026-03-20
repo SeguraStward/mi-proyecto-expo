@@ -44,8 +44,7 @@ function RootNavigator() {
   return (
     <ThemeProvider value={navTheme}>
       <Stack screenOptions={{ headerShown: false }}>
-        {/* Login desactivado temporalmente — entra directo a la app */}
-        {/* <Stack.Screen name="(auth)" /> */}
+        <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
       </Stack>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
