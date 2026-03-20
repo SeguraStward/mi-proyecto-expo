@@ -1,0 +1,200 @@
+{
+  "collections": {
+    "usernames": [
+      {
+        "id": "SeguraStward",
+        "userId": "user-1",
+        "createdAt": "2026-03-20T11:00:00.000Z"
+      }
+    ],
+    "users": [
+      {
+        "id": "user-1",
+        "username": "SeguraStward",
+        "displayName": "Stward",
+        "profile": {
+          "bio": "Entusiasta de la tecnología y cuidador de plantas en proceso.",
+          "avatarUrl": "https://link-a-foto.com/avatar1.jpg"
+        },
+        "contactInfo": {
+          "instagram": "stward_plantas",
+          "whatsapp": "+50688888888"
+        },
+        "location": {
+          "country": "Costa Rica",
+          "province": "San José"
+        },
+        "gamification": {
+          "level": 3,
+          "levelName": "Brote Prometedor",
+          "currentXP": 450,
+          "totalXP": 1120,
+          "nextLevelXP": 1000,
+          "dailyStreak": 7,
+          "badges": [
+            "primer_riego",
+            "racha_7_dias",
+            "salvador_de_orquideas"
+          ]
+        },
+        "social": {
+          "enraizados": [
+            "user-2"
+          ]
+        },
+        "createdAt": "2026-03-20T11:00:00.000Z",
+        "updatedAt": "2026-03-20T11:25:00.000Z"
+      },
+      {
+        "id": "user-2",
+        "username": "LauJardin",
+        "displayName": "Laura",
+        "profile": {
+          "bio": "Orquídeas, café y jardinería urbana.",
+          "avatarUrl": "https://link-a-foto.com/avatar2.jpg"
+        },
+        "contactInfo": {
+          "instagram": "lau_jardin",
+          "whatsapp": "+50687777777"
+        },
+        "location": {
+          "country": "Costa Rica",
+          "province": "Heredia"
+        },
+        "gamification": {
+          "level": 2,
+          "levelName": "Semilla Curiosa",
+          "currentXP": 190,
+          "totalXP": 390,
+          "nextLevelXP": 500,
+          "dailyStreak": 3,
+          "badges": [
+            "primer_registro"
+          ]
+        },
+        "social": {
+          "enraizados": [
+            "user-1"
+          ]
+        },
+        "createdAt": "2026-03-20T10:20:00.000Z",
+        "updatedAt": "2026-03-20T11:25:00.000Z"
+      }
+    ],
+    "friendships": [
+      {
+        "id": "friend-1",
+        "userAId": "user-1",
+        "userBId": "user-2",
+        "pairKey": "user-1_user-2",
+        "status": "accepted",
+        "createdAt": "2026-03-20T10:30:00.000Z",
+        "updatedAt": "2026-03-20T10:35:00.000Z"
+      }
+    ],
+    "plants": [
+      {
+        "id": "plant-1",
+        "userId": "user-1",
+        "nickname": "Señor Espinas",
+        "photos": [
+          {
+            "url": "https://link-a-foto.com/cactus_creciendo.jpg",
+            "isPrimary": true,
+            "caption": "Primer mes en casa",
+            "takenAt": "2026-03-01T09:00:00.000Z"
+          },
+          {
+            "url": "https://link-a-foto.com/cactus_semana3.jpg",
+            "isPrimary": false,
+            "caption": "Creció 2 cm",
+            "takenAt": "2026-03-20T11:20:00.000Z"
+          }
+        ],
+        "botanicalInfo": {
+          "commonName": "Cactus de San Pedro",
+          "scientificName": "Echinopsis pachanoi",
+          "family": "Cactaceae",
+          "origin": "Cordillera de los Andes",
+          "climate": "Árido / Semiárido",
+          "toxicity": "Ligeramente tóxica para mascotas",
+          "maxHeight": "Hasta 6 metros en exterior",
+          "growthRate": "Rápido (30cm por año)"
+        },
+        "careRules": {
+          "wateringFrequencyDays": 14,
+          "sunlight": "Luz directa plena",
+          "humidity": "Baja (ideal < 40%)",
+          "fertilizerFrequencyDays": 90,
+          "soilType": "Sustrato mineral con excelente drenaje",
+          "pruningSeason": "No requiere",
+          "rotationFrequencyDays": 30
+        },
+        "status": {
+          "ageInMonths": 12,
+          "currentHeightCm": 45,
+          "potSizeCm": 20,
+          "health": "excelente",
+          "careStreak": 5,
+          "waterLevel": 78,
+          "lastWateredAt": "2026-03-15T08:00:00.000Z",
+          "nextWateringDue": "2026-03-29T08:00:00.000Z"
+        },
+        "createdAt": "2026-03-20T11:05:00.000Z",
+        "updatedAt": "2026-03-20T11:20:00.000Z"
+      }
+    ],
+    "daily_tasks": [
+      {
+        "id": "task-1",
+        "userId": "user-1",
+        "plantId": "plant-1",
+        "taskType": "watering",
+        "dueAt": "2026-03-29T08:00:00.000Z",
+        "status": "pending",
+        "xpReward": 50,
+        "createdAt": "2026-03-20T11:10:00.000Z"
+      },
+      {
+        "id": "task-2",
+        "userId": "user-1",
+        "plantId": "plant-1",
+        "taskType": "photo_update",
+        "dueAt": "2026-03-27T10:00:00.000Z",
+        "status": "pending",
+        "xpReward": 20,
+        "createdAt": "2026-03-20T11:11:00.000Z"
+      }
+    ],
+    "care_logs": [
+      {
+        "id": "log-1",
+        "userId": "user-1",
+        "plantId": "plant-1",
+        "actionType": "watering",
+        "xpEarned": 50,
+        "notes": "Riego completado. El sustrato estaba completamente seco.",
+        "timestamp": "2026-03-20T11:15:00.000Z"
+      },
+      {
+        "id": "log-2",
+        "userId": "user-1",
+        "plantId": "plant-1",
+        "actionType": "photo_update",
+        "xpEarned": 20,
+        "notes": "Creció 2 centímetros esta semana.",
+        "timestamp": "2026-03-20T11:20:00.000Z"
+      }
+    ],
+    "plant_milestones": [
+      {
+        "id": "milestone-1",
+        "plantId": "plant-1",
+        "userId": "user-1",
+        "title": "Primer mes sin fallar riego",
+        "description": "Se completó una racha estable de cuidados.",
+        "achievedAt": "2026-03-20T11:25:00.000Z"
+      }
+    ]
+  }
+}
