@@ -7,6 +7,8 @@
 #   ./dev.sh          → Levanta contenedores, instala deps si faltan, inicia Expo
 #   ./dev.sh rebuild  → Reconstruye la imagen Docker desde cero
 #   ./dev.sh stop     → Detiene los contenedores
+#   ./dev.sh seed-dry-run → Valida seed de Firestore sin escribir
+#   ./dev.sh seed-write   → Ejecuta seed real en Firestore
 #
 # ============================================================================
 
@@ -46,6 +48,27 @@ case "${1:-start}" in
     ok "Imagen reconstruida. Ejecuta ./dev.sh para iniciar."
     ;;
 
+  # ── Seed Firestore en modo validacion (sin escribir) ──────────────────────
+  seed-dry-run)
+    log "Construyendo servicio seed (si hace falta)..."
+    docker compose build seed
+
+    log "Ejecutando seed en modo dry-run..."
+    docker compose run --rm seed python seed_firestore.py --dry-run
+    ok "Dry-run completado."
+    ;;
+
+  # ── Seed Firestore en modo escritura real ──────────────────────────────────
+  seed-write)
+    log "Construyendo servicio seed (si hace falta)..."
+    docker compose build seed
+
+    warn "Se va a escribir en Firestore con la configuracion actual de backend/firebase_seed/.env"
+    log "Ejecutando seed en modo write..."
+    docker compose run --rm seed python seed_firestore.py
+    ok "Seed write completado."
+    ;;
+
   # ── Flujo principal: levantar + instalar + expo start ───────────────────────
   start)
     log "Levantando contenedores Docker..."
@@ -55,26 +78,31 @@ case "${1:-start}" in
     docker compose exec app npm install --prefer-offline 2>/dev/null || \
       docker compose exec app npm install
 
+    log "Instalando @expo/ngrok para tunnel..."
+    docker compose exec app npx expo install @expo/ngrok@^4.0.0 2>/dev/null || true
+
     ok "Dependencias listas."
 
-    log "Iniciando Expo dev server..."
+    log "Iniciando Expo con tunnel (puede tardar ~30s la primera vez)..."
     echo ""
     echo -e "${GREEN}================================================${NC}"
-    echo -e "${GREEN}  Pixel Garden — Expo Dev Server                ${NC}"
-    echo -e "${GREEN}  Escanea el QR con Expo Go para ver la app    ${NC}"
+    echo -e "${GREEN}  Pixel Garden — Expo Dev Server (Tunnel)       ${NC}"
+    echo -e "${GREEN}  Escanea el QR con Expo Go desde cualquier red ${NC}"
     echo -e "${GREEN}  Ctrl+C para detener                          ${NC}"
     echo -e "${GREEN}================================================${NC}"
     echo ""
 
-    docker compose exec app npx expo start
+    docker compose exec app npx expo start --tunnel
     ;;
 
   *)
-    echo "Uso: ./dev.sh [start|stop|rebuild]"
+    echo "Uso: ./dev.sh [start|stop|rebuild|seed-dry-run|seed-write]"
     echo ""
     echo "  start    (default) Levanta Docker + instala deps + inicia Expo"
     echo "  stop     Detiene los contenedores"
     echo "  rebuild  Reconstruye la imagen Docker sin cache"
+    echo "  seed-dry-run  Valida seed Firestore sin escribir"
+    echo "  seed-write    Ejecuta seed real en Firestore"
     exit 1
     ;;
 esac
