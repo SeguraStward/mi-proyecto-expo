@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 
+import { AuthProvider } from '@/src/context/AuthContext';
 import { AppThemeProvider, useThemeToggle } from '@/src/context/ThemeContext';
 
 // Mantener splash screen visible mientras cargan las fuentes
@@ -72,8 +73,10 @@ export default function RootLayout() {
   }
 
   return (
-    <AppThemeProvider>
-      <RootNavigator />
-    </AppThemeProvider>
+    <AuthProvider>
+      <AppThemeProvider>
+        <RootNavigator />
+      </AppThemeProvider>
+    </AuthProvider>
   );
 }

@@ -7,33 +7,37 @@
 import { AppText } from '@/src/components/ui/AppText';
 import { Input } from '@/src/components/ui/Input';
 import { RetroButton } from '@/src/components/ui/RetroButton';
+import { useAuth } from '@/src/context/AuthContext';
 import { useAppTheme } from '@/src/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { Link, router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    View,
 } from 'react-native';
 import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withSequence,
-  withSpring,
-  withTiming,
+    Easing,
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withRepeat,
+    withSequence,
+    withSpring,
+    withTiming,
 } from 'react-native-reanimated';
 
 export default function LoginScreen() {
   const theme = useAppTheme();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // ── Shared values para animaciones ──────────────────────────────────────────
 
@@ -152,9 +156,28 @@ export default function LoginScreen() {
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
-  const handleLogin = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.replace('/(app)/(tabs)/profile');
+  const handleLogin = async () => {
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail || !password) {
+      setFormError('Completa correo y contraseña.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFormError(null);
+
+    try {
+      await login(normalizedEmail, password);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace('/(app)/(tabs)/profile');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No fue posible iniciar sesión.';
+      setFormError(message);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // ── Estilos estáticos ─────────────────────────────────────────────────────────
@@ -388,9 +411,21 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
               />
 
+              {formError ? (
+                <AppText
+                  preset="caption"
+                  color={theme.colors.error}
+                  style={{ marginTop: theme.spacing.xs }}
+                >
+                  {formError}
+                </AppText>
+              ) : null}
+
               <RetroButton
                 label="[ ENTRAR ]"
                 onPress={handleLogin}
+                loading={isSubmitting}
+                disabled={isSubmitting}
                 style={{ marginTop: theme.spacing.md }}
                 accessibilityLabel="Iniciar sesión en El Invernadero"
               />

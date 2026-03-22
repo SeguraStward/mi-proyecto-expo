@@ -1,3 +1,28 @@
 node_modules
+**/node_modules
+
 .expo
+dist
+web-build
+
 .git
+.gitignore
+.vscode
+.idea
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+backend/firebase_seed/.env
+backend/data/*firebase-adminsdk*.json
+data/*firebase-adminsdk*.json
+
+# Python local artifacts
+backend/firebase_seed/.venv
+**/__pycache__
+*.pyc
+
+# Logs and misc
+*.log
+coverage

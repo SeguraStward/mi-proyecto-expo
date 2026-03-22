@@ -23,10 +23,11 @@
 import { AppText } from '@/src/components/ui/AppText';
 import { Input } from '@/src/components/ui/Input';
 import { PrimaryButton } from '@/src/components/ui/PrimaryButton';
+import { useAuth } from '@/src/context/AuthContext';
 import { useAppTheme } from '@/src/theme/designSystem';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Link, router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
@@ -37,10 +38,33 @@ import {
 
 export default function RegisterScreen() {
   const theme = useAppTheme();
+  const { register } = useAuth();
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const handleRegister = () => {
-    // TODO: Implementar lógica de registro
-    router.replace('/(app)/(tabs)/profile');
+  const handleRegister = async () => {
+    const normalizedEmail = email.trim();
+
+    if (!displayName.trim() || !normalizedEmail || !password) {
+      setFormError('Completa nombre, correo y contraseña.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFormError(null);
+
+    try {
+      await register(displayName, normalizedEmail, password);
+      router.replace('/(app)/(tabs)/profile');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No fue posible crear la cuenta.';
+      setFormError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -69,22 +93,40 @@ export default function RegisterScreen() {
         <Input
           label="Nombre completo"
           placeholder="Tu nombre"
+          value={displayName}
+          onChangeText={setDisplayName}
         />
         <Input
           label="Correo electrónico"
           placeholder="tucorreo@email.com"
           keyboardType="email-address"
           autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
         />
         <Input
           label="Contraseña"
           placeholder="Mínimo 8 caracteres"
           secureTextEntry
+          value={password}
+          onChangeText={setPassword}
         />
+
+        {formError ? (
+          <AppText
+            preset="caption"
+            color={theme.colors.error}
+            style={{ marginBottom: theme.spacing.sm }}
+          >
+            {formError}
+          </AppText>
+        ) : null}
 
         <PrimaryButton
           title="Registrarme"
           onPress={handleRegister}
+          loading={isSubmitting}
+          disabled={isSubmitting}
           style={{ marginTop: theme.spacing.sm }}
         />
 

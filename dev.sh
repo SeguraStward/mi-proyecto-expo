@@ -4,7 +4,8 @@
 # ============================================================================
 #
 # Uso:
-#   ./dev.sh          → Levanta contenedores, instala deps si faltan, inicia Expo
+#   ./dev.sh          → Levanta contenedores, valida deps y inicia Expo
+#   ./dev.sh deps     → Fuerza instalacion de dependencias en contenedor app
 #   ./dev.sh rebuild  → Reconstruye la imagen Docker desde cero
 #   ./dev.sh stop     → Detiene los contenedores
 #   ./dev.sh seed-dry-run → Valida seed de Firestore sin escribir
@@ -29,6 +30,32 @@ ok()    { echo -e "${GREEN}[ok]${NC} $1"; }
 warn()  { echo -e "${YELLOW}[!]${NC} $1"; }
 fail()  { echo -e "${RED}[error]${NC} $1"; exit 1; }
 
+lock_hash() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum package-lock.json | awk '{print $1}'
+  else
+    shasum -a 256 package-lock.json | awk '{print $1}'
+  fi
+}
+
+install_deps() {
+  local hash="$1"
+  log "Instalando dependencias (npm install)..."
+  docker compose exec -T app npm install --prefer-offline 2>/dev/null || \
+    docker compose exec -T app npm install
+  docker compose exec -T app sh -lc "printf '%s' '$hash' > /app/node_modules/.deps-lock-hash"
+  ok "Dependencias actualizadas."
+}
+
+ensure_deps() {
+  local hash="$1"
+  if docker compose exec -T app sh -lc "[ -d /app/node_modules ] && [ -f /app/node_modules/.deps-lock-hash ] && [ \"\$(cat /app/node_modules/.deps-lock-hash)\" = \"$hash\" ]"; then
+    ok "Dependencias al dia (sin npm install)."
+  else
+    install_deps "$hash"
+  fi
+}
+
 # ── Comandos ─────────────────────────────────────────────────────────────────
 
 case "${1:-start}" in
@@ -46,6 +73,14 @@ case "${1:-start}" in
     docker compose down
     docker compose build --no-cache
     ok "Imagen reconstruida. Ejecuta ./dev.sh para iniciar."
+    ;;
+
+  # ── Instalacion forzada de dependencias ───────────────────────────────────
+  deps)
+    log "Levantando contenedor app..."
+    docker compose up -d app
+    HASH="$(lock_hash)"
+    install_deps "$HASH"
     ;;
 
   # ── Seed Firestore en modo validacion (sin escribir) ──────────────────────
@@ -71,17 +106,11 @@ case "${1:-start}" in
 
   # ── Flujo principal: levantar + instalar + expo start ───────────────────────
   start)
-    log "Levantando contenedores Docker..."
-    docker compose up -d
+    log "Levantando contenedor app..."
+    docker compose up -d app
 
-    log "Verificando dependencias (npm install)..."
-    docker compose exec app npm install --prefer-offline 2>/dev/null || \
-      docker compose exec app npm install
-
-    log "Instalando @expo/ngrok para tunnel..."
-    docker compose exec app npx expo install @expo/ngrok@^4.0.0 2>/dev/null || true
-
-    ok "Dependencias listas."
+    HASH="$(lock_hash)"
+    ensure_deps "$HASH"
 
     log "Iniciando Expo con tunnel (puede tardar ~30s la primera vez)..."
     echo ""
@@ -96,9 +125,10 @@ case "${1:-start}" in
     ;;
 
   *)
-    echo "Uso: ./dev.sh [start|stop|rebuild|seed-dry-run|seed-write]"
+    echo "Uso: ./dev.sh [start|deps|stop|rebuild|seed-dry-run|seed-write]"
     echo ""
-    echo "  start    (default) Levanta Docker + instala deps + inicia Expo"
+    echo "  start    (default) Levanta app + valida deps + inicia Expo"
+    echo "  deps     Fuerza npm install dentro del contenedor app"
     echo "  stop     Detiene los contenedores"
     echo "  rebuild  Reconstruye la imagen Docker sin cache"
     echo "  seed-dry-run  Valida seed Firestore sin escribir"

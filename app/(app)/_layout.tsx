@@ -1,8 +1,18 @@
+import { useAuth } from '@/src/context/AuthContext';
 import { useAppTheme } from '@/src/theme/designSystem';
-import { Stack } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 
 export default function AppLayout() {
+  const { isAuthenticated, isLoading } = useAuth();
   const theme = useAppTheme();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   return (
     <Stack
