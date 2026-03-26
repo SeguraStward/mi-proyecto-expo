@@ -13,7 +13,7 @@
       "bundleIdentifier": "com.plant.app"
     },
     "android": {
-      "package": "com.plant.app",
+      "package": "com.retrogarden.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -46,12 +46,6 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "576f21e5-8abd-42e6-ad9b-cdea5a9b1db8"
-      }
     }
   }
 }
