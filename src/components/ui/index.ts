@@ -9,4 +9,6 @@ export { Input } from './Input';
 export { PlantCard } from './PlantCard';
 export { PrimaryButton as Button } from './PrimaryButton';
 export { RetroButton } from './RetroButton';
+export { WateringFrequencyPicker } from './WateringFrequencyPicker';
+export type { WateringFrequency } from './WateringFrequencyPicker';
 

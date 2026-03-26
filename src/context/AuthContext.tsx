@@ -1,12 +1,14 @@
 import { auth, db } from '@/src/services/firebase';
 import {
+    GoogleAuthProvider,
     createUserWithEmailAndPassword,
     onAuthStateChanged,
+    signInWithCredential,
     signInWithEmailAndPassword,
     signOut,
     type User,
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 interface AuthContextValue {
@@ -15,6 +17,7 @@ interface AuthContextValue {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   register: (displayName: string, email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -86,12 +89,50 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, { merge: true });
   };
 
+  const loginWithGoogle = async (idToken: string) => {
+    const credential = GoogleAuthProvider.credential(idToken);
+    const result = await signInWithCredential(auth, credential);
+    const { uid, displayName: dn, email: em, photoURL } = result.user;
+
+    // Crear doc en Firestore solo si es usuario nuevo
+    const userRef = doc(db, 'users', uid);
+    const existing = await getDoc(userRef);
+    if (!existing.exists()) {
+      const username = buildUsername(dn ?? '', em ?? '', uid);
+      await setDoc(userRef, {
+        id: uid,
+        username,
+        displayName: dn?.trim() || username,
+        email: em?.toLowerCase() ?? '',
+        profile: {
+          bio: 'Nuevo cultivador en Pixel Garden.',
+          avatarUrl: photoURL ?? '',
+        },
+        contactInfo: { instagram: '', whatsapp: '' },
+        location: { country: '', province: '' },
+        gamification: {
+          level: 1,
+          levelName: 'Semilla Curiosa',
+          currentXP: 0,
+          totalXP: 0,
+          nextLevelXP: 200,
+          dailyStreak: 0,
+          badges: [],
+        },
+        social: { enraizados: [] },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        authUid: uid,
+      });
+    }
+  };
+
   const logout = async () => {
     await signOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated: !!user, isLoading, user, login, register, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated: !!user, isLoading, user, login, register, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );

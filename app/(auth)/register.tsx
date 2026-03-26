@@ -24,7 +24,7 @@ import { AppText } from '@/src/components/ui/AppText';
 import { Input } from '@/src/components/ui/Input';
 import { PrimaryButton } from '@/src/components/ui/PrimaryButton';
 import { useAuth } from '@/src/context/AuthContext';
-import { useAppTheme } from '@/src/theme/designSystem';
+import { useAppTheme } from '@/src/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
@@ -53,14 +53,29 @@ export default function RegisterScreen() {
       return;
     }
 
+    if (password.length < 8) {
+      setFormError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+
     setIsSubmitting(true);
     setFormError(null);
 
     try {
       await register(displayName, normalizedEmail, password);
       router.replace('/(app)/(tabs)/profile');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'No fue posible crear la cuenta.';
+    } catch (error: any) {
+      const code = error?.code as string | undefined;
+      const message =
+        code === 'auth/email-already-in-use'
+          ? 'Este correo ya está registrado. ¿Quieres iniciar sesión?'
+          : code === 'auth/invalid-email'
+          ? 'El correo no tiene un formato válido.'
+          : code === 'auth/weak-password'
+          ? 'La contraseña es muy débil. Usa al menos 8 caracteres.'
+          : code === 'auth/network-request-failed'
+          ? 'Sin conexión. Revisa tu internet.'
+          : 'No fue posible crear la cuenta. Intenta de nuevo.';
       setFormError(message);
     } finally {
       setIsSubmitting(false);
@@ -151,5 +166,4 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { flex: 1, justifyContent: 'center' },
-  emoji: { fontSize: 48, textAlign: 'center', marginBottom: 8 },
 });

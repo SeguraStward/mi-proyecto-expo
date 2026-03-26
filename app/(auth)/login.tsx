@@ -8,6 +8,7 @@ import { AppText } from '@/src/components/ui/AppText';
 import { Input } from '@/src/components/ui/Input';
 import { RetroButton } from '@/src/components/ui/RetroButton';
 import { useAuth } from '@/src/context/AuthContext';
+import { useGoogleAuth } from '@/src/hooks/useGoogleAuth';
 import { useAppTheme } from '@/src/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
@@ -33,10 +34,12 @@ import Animated, {
 
 export default function LoginScreen() {
   const theme = useAppTheme();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
+  const { response, promptAsync } = useGoogleAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   // ── Shared values para animaciones ──────────────────────────────────────────
@@ -62,6 +65,45 @@ export default function LoginScreen() {
   // Formulario
   const formOpacity = useSharedValue(0);
   const formY       = useSharedValue(32);
+
+  // ── Google Auth response ──────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!response) return;
+
+    if (response.type === 'success') {
+      const idToken = response.params?.id_token;
+      if (!idToken) {
+        setFormError('No se pudo obtener el token de Google.');
+        setIsGoogleSubmitting(false);
+        return;
+      }
+      loginWithGoogle(idToken)
+        .then(async () => {
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          router.replace('/(app)/(tabs)/profile');
+        })
+        .catch(() => {
+          setFormError('No fue posible iniciar sesión con Google.');
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        })
+        .finally(() => setIsGoogleSubmitting(false));
+    } else {
+      setIsGoogleSubmitting(false);
+      if (response.type !== 'dismiss') {
+        setFormError('Inicio con Google cancelado o fallido.');
+      }
+    }
+  }, [response]);
+
+  const handleGoogleLogin = () => {
+    setFormError(null);
+    setIsGoogleSubmitting(true);
+    promptAsync().catch(() => {
+      setFormError('Error al abrir el inicio de sesión con Google.');
+      setIsGoogleSubmitting(false);
+    });
+  };
 
   // ── Secuencia de entrada ─────────────────────────────────────────────────────
 
@@ -171,8 +213,18 @@ export default function LoginScreen() {
       await login(normalizedEmail, password);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/(app)/(tabs)/profile');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'No fue posible iniciar sesión.';
+    } catch (error: any) {
+      const code = error?.code as string | undefined;
+      const message =
+        code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found'
+          ? 'Correo o contraseña incorrectos.'
+          : code === 'auth/invalid-email'
+          ? 'El correo no tiene un formato válido.'
+          : code === 'auth/too-many-requests'
+          ? 'Demasiados intentos. Espera un momento e intenta de nuevo.'
+          : code === 'auth/network-request-failed'
+          ? 'Sin conexión. Revisa tu internet.'
+          : 'No fue posible iniciar sesión. Intenta de nuevo.';
       setFormError(message);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
@@ -425,9 +477,26 @@ export default function LoginScreen() {
                 label="[ ENTRAR ]"
                 onPress={handleLogin}
                 loading={isSubmitting}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isGoogleSubmitting}
                 style={{ marginTop: theme.spacing.md }}
                 accessibilityLabel="Iniciar sesión en El Invernadero"
+              />
+
+              {/* Divider */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: theme.spacing.md, gap: theme.spacing.sm }}>
+                <View style={{ flex: 1, height: 1, backgroundColor: theme.colors.border }} />
+                <AppText preset="caption" color={theme.colors.textMuted}>o</AppText>
+                <View style={{ flex: 1, height: 1, backgroundColor: theme.colors.border }} />
+              </View>
+
+              {/* Botón Google */}
+              <RetroButton
+                label="[ CONTINUAR CON GOOGLE ]"
+                onPress={handleGoogleLogin}
+                loading={isGoogleSubmitting}
+                disabled={isSubmitting || isGoogleSubmitting}
+                style={{ backgroundColor: theme.colors.surface }}
+                accessibilityLabel="Iniciar sesión con Google"
               />
             </View>
 
