@@ -8,7 +8,7 @@
 import { useAppTheme } from '@/src/theme/designSystem';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -98,7 +98,7 @@ export function Toast({ type, message, visible, onDismiss, duration = 3000 }: To
         styles.container,
         animatedStyle,
         {
-          top: insets.top + 8,
+          top: Platform.OS === 'web' ? 16 : insets.top + 8,
           backgroundColor: colors.bg,
           borderColor: colors.border,
           ...theme.elevation.sm,
@@ -135,7 +135,7 @@ export function Toast({ type, message, visible, onDismiss, duration = 3000 }: To
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
+    position: Platform.OS === 'web' ? ('fixed' as any) : 'absolute',
     left: 16,
     right: 16,
     borderWidth: 3,

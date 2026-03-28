@@ -32,9 +32,9 @@ export default function CreatePlantForm() {
   const { showToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
-  const { control, handleSubmit } = useForm<PlantCreateFormInput>({
+  const { control, handleSubmit, formState: { errors } } = useForm<PlantCreateFormInput>({
     resolver: zodResolver(plantCreateSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
     defaultValues: {
       nickname: '',
       commonName: '',
@@ -47,10 +47,14 @@ export default function CreatePlantForm() {
   });
 
   const onSubmit = async (data: PlantCreateFormInput) => {
-    if (!user?.uid) return;
+    if (!user?.uid) {
+      showToast({ type: 'error', message: 'Debes iniciar sesion' });
+      return;
+    }
+    // zodResolver ya transformo los strings a numeros — usamos data directamente
+    const parsed = data as unknown as import('@/src/schemas/plant.schema').PlantCreateFormData;
     setIsSaving(true);
     try {
-      const parsed = plantCreateSchema.parse(data);
       const now = new Date().toISOString();
       await createPlant({
         userId: user.uid,
@@ -178,7 +182,7 @@ export default function CreatePlantForm() {
         <View style={s.actions}>
           <Pressable
             style={[s.btn, s.btnSave]}
-            onPress={handleSubmit(onSubmit)}
+            onPress={handleSubmit(onSubmit, (errs) => console.log('Validation errors:', errs))}
             disabled={isSaving}
             accessibilityRole="button"
             accessibilityLabel="Agregar planta"

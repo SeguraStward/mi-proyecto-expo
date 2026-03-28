@@ -1,5 +1,6 @@
 import { Toast, type ToastType } from '@/src/components/ui/Toast';
 import React, { createContext, useCallback, useContext, useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 
 interface ToastConfig {
   type: ToastType;
@@ -29,19 +30,29 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastContext.Provider value={{ showToast }}>
-      {children}
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          visible={visible}
-          onDismiss={handleDismiss}
-          duration={toast.duration}
-        />
-      )}
+      <View style={styles.root}>
+        {children}
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            visible={visible}
+            onDismiss={handleDismiss}
+            duration={toast.duration}
+          />
+        )}
+      </View>
     </ToastContext.Provider>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    // En web, position fixed para que el toast flote sobre todo el contenido
+    ...(Platform.OS === 'web' ? ({ position: 'relative' } as any) : {}),
+  },
+});
 
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
