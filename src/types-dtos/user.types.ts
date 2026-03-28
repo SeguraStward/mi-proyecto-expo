@@ -1,30 +1,67 @@
 /**
- * Tipos y DTOs del usuario.
+ * Tipos y DTOs del usuario — alineados con el schema de Firestore.
  */
-export interface UserInterface {
-  /** Nombre completo */
-  nombre: string;
-  /** Apodo / nombre de usuario */
-  apodo: string;
-  /** Cantidad total de plantas */
-  cantidadPlantas: number;
-  /** Categorías de plantas que posee (ej. "Suculentas", "Tropicales") */
-  categorias: string[];
-  /** Racha de días consecutivos de riego */
-  racha: number;
-  /** Fecha de cumpleaños (ISO 8601) */
-  cumple: string;
-  /** URI de la imagen de perfil */
-  imagen: string;
-  /** Número de amigos */
-  amigos: number;
-  /** true = perfil privado */
-  privacidad: boolean;
-  /** Descripción / bio */
-  descripcion: string;
-  /** Nombre de la planta favorita */
-  plantaFavorita: string;
+
+export interface UserProfile {
+  bio: string;
+  avatarUrl: string;
 }
 
-/** DTO para actualización parcial del perfil */
-export type UpdateUserDTO = Partial<Omit<UserInterface, 'apodo'>>;
+export interface UserContactInfo {
+  instagram: string;
+  whatsapp: string;
+}
+
+export interface UserLocation {
+  country: string;
+  province: string;
+}
+
+export interface UserGamification {
+  level: number;
+  levelName: string;
+  currentXP: number;
+  totalXP: number;
+  nextLevelXP: number;
+  dailyStreak: number;
+  badges: string[];
+}
+
+export interface UserSocial {
+  enraizados: string[];
+}
+
+export interface UserDocument {
+  id: string;
+  username: string;
+  displayName: string;
+  profile: UserProfile;
+  contactInfo: UserContactInfo;
+  location: UserLocation;
+  gamification: UserGamification;
+  social: UserSocial;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** DTO para actualizacion parcial del perfil (solo campos editables). */
+export type UpdateUserDTO = Partial<
+  Pick<UserDocument, 'displayName' | 'profile' | 'contactInfo' | 'location'>
+>;
+
+/**
+ * @deprecated Usar UserDocument en su lugar. Mantenido para compatibilidad temporal.
+ */
+export interface UserInterface {
+  nombre: string;
+  apodo: string;
+  cantidadPlantas: number;
+  categorias: string[];
+  racha: number;
+  cumple: string;
+  imagen: string;
+  amigos: number;
+  privacidad: boolean;
+  descripcion: string;
+  plantaFavorita: string;
+}
