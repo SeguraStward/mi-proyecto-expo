@@ -1,7 +1,8 @@
 import { useAuth } from '@/src/context/AuthContext';
 import { getUserById } from '@/src/services/firestore';
 import type { UserDocument } from '@/src/types-dtos/user.types';
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 export function useUserProfile() {
   const { user } = useAuth();
@@ -26,9 +27,12 @@ export function useUserProfile() {
     }
   }, [user?.uid]);
 
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+  // Refetch cada vez que la pantalla gana foco
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfile();
+    }, [fetchProfile])
+  );
 
   return { userDoc, isLoading, error, refetch: fetchProfile };
 }

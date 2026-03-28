@@ -13,12 +13,15 @@ import { plantEditSchema, type PlantEditFormInput } from '@/src/schemas/plant.sc
 import { upsertPlant } from '@/src/services/firestore';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
+import { pickImage } from '@/src/utils/pickImage';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -43,9 +46,15 @@ export default function EditPlantForm() {
   const { plant, isLoading } = usePlantDetail(id);
   const { showToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+
+  const handlePickImage = async () => {
+    const uri = await pickImage();
+    if (uri) setPhotoUri(uri);
+  };
 
   const { control, handleSubmit, reset, formState: { isDirty } } = useForm<PlantEditFormInput>({
-    resolver: zodResolver(plantEditSchema),
+    resolver: zodResolver(plantEditSchema) as any,
     mode: 'onSubmit',
     defaultValues: {
       nickname: defaultName ?? '',
@@ -58,6 +67,13 @@ export default function EditPlantForm() {
       potSizeCm: '',
     },
   });
+
+  // Cargar foto existente
+  useEffect(() => {
+    if (plant?.photos?.[0]?.url && !photoUri) {
+      setPhotoUri(plant.photos[0].url);
+    }
+  }, [plant, photoUri]);
 
   // Sobrescribir defaults cuando llegan datos reales de Firestore
   useEffect(() => {
@@ -81,9 +97,14 @@ export default function EditPlantForm() {
     const parsed = data as unknown as import('@/src/schemas/plant.schema').PlantEditFormData;
     setIsSaving(true);
     try {
+      const now = new Date().toISOString();
+      const photos = photoUri
+        ? [{ url: photoUri, isPrimary: true, caption: '', takenAt: now }]
+        : (plant?.photos ?? []);
       await upsertPlant(id, {
         userId: user?.uid ?? '',
         nickname: parsed.nickname,
+        photos,
         careRules: {
           wateringFrequencyDays: parsed.wateringFrequencyDays,
           sunlight: parsed.sunlight,
@@ -150,6 +171,26 @@ export default function EditPlantForm() {
             </Text>
           )}
         </View>
+
+        {/* Foto de la planta */}
+        <Pressable
+          onPress={handlePickImage}
+          style={s.photoPickerContainer}
+          accessibilityRole="button"
+          accessibilityLabel="Cambiar foto de la planta"
+        >
+          {photoUri ? (
+            <Image source={{ uri: photoUri }} style={s.photoPreview} />
+          ) : (
+            <View style={s.photoPlaceholder}>
+              <MaterialCommunityIcons name="camera-plus" size={36} color={theme.colors.textMuted} />
+              <Text style={s.photoPlaceholderText}>AGREGAR FOTO</Text>
+            </View>
+          )}
+          <View style={s.photoBadge}>
+            <MaterialCommunityIcons name="pencil" size={14} color={theme.colors.textOnPrimary} />
+          </View>
+        </Pressable>
 
         <View style={s.section}>
           <Text style={s.sectionTitle}>IDENTIDAD</Text>
@@ -254,6 +295,47 @@ function getStyles(t: AppTheme) {
     backText: { fontFamily: t.typography.fontFamily, fontSize: t.typography.sizes.caption },
     title: { fontFamily: t.typography.fontFamily, fontSize: t.typography.sizes.title, color: t.colors.textPrimary },
     subtitle: { fontFamily: t.typography.fontFamilyMono, fontSize: t.typography.sizes.body, color: t.colors.textSecondary, marginTop: 4 },
+    photoPickerContainer: {
+      alignSelf: 'center',
+      marginBottom: t.spacing.lg,
+      borderWidth: t.borderWidths.thick,
+      borderColor: t.colors.border,
+      borderRadius: t.radius.md,
+      overflow: 'hidden',
+      width: 160,
+      height: 160,
+      ...t.elevation.sm,
+    },
+    photoPreview: {
+      width: '100%',
+      height: '100%',
+    },
+    photoPlaceholder: {
+      flex: 1,
+      backgroundColor: t.colors.surfaceVariant,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: t.spacing.sm,
+    },
+    photoPlaceholderText: {
+      fontFamily: t.typography.fontFamily,
+      fontSize: t.typography.sizes.overline,
+      color: t.colors.textMuted,
+      letterSpacing: 1,
+    },
+    photoBadge: {
+      position: 'absolute',
+      bottom: 6,
+      right: 6,
+      width: 28,
+      height: 28,
+      backgroundColor: t.colors.primary,
+      borderWidth: t.borderWidths.medium,
+      borderColor: t.colors.border,
+      borderRadius: t.radius.sm,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
     section: {
       backgroundColor: t.colors.surface,
       borderWidth: t.borderWidths.thick,

@@ -1,7 +1,8 @@
 import { useAuth } from '@/src/context/AuthContext';
 import { getPlantsByUser } from '@/src/services/firestore';
 import type { PlantDocument } from '@/src/types-dtos/plant.types';
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 export function useGardenPlants() {
   const { user } = useAuth();
@@ -26,9 +27,12 @@ export function useGardenPlants() {
     }
   }, [user?.uid]);
 
-  useEffect(() => {
-    fetchPlants();
-  }, [fetchPlants]);
+  // Refetch cada vez que la pantalla gana foco
+  useFocusEffect(
+    useCallback(() => {
+      fetchPlants();
+    }, [fetchPlants])
+  );
 
   return { plants, isLoading, error, refetch: fetchPlants };
 }

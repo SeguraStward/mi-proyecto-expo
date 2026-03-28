@@ -1,6 +1,7 @@
 import { getPlantById } from '@/src/services/firestore';
 import type { PlantDocument } from '@/src/types-dtos/plant.types';
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 export function usePlantDetail(plantId: string | undefined) {
   const [plant, setPlant] = useState<PlantDocument | null>(null);
@@ -24,9 +25,12 @@ export function usePlantDetail(plantId: string | undefined) {
     }
   }, [plantId]);
 
-  useEffect(() => {
-    fetchPlant();
-  }, [fetchPlant]);
+  // Refetch cada vez que la pantalla gana foco
+  useFocusEffect(
+    useCallback(() => {
+      fetchPlant();
+    }, [fetchPlant])
+  );
 
   return { plant, isLoading, error, refetch: fetchPlant };
 }

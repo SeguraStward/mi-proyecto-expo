@@ -39,7 +39,7 @@ export default function EditProfileForm() {
   const [isSaving, setIsSaving] = useState(false);
 
   const { control, handleSubmit, reset, formState: { isDirty } } = useForm<UserProfileFormData>({
-    resolver: zodResolver(userProfileSchema),
+    resolver: zodResolver(userProfileSchema) as any,
     mode: 'onBlur',
     defaultValues: {
       displayName: '',
