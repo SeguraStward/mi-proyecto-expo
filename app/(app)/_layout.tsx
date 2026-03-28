@@ -36,6 +36,13 @@ export default function AppLayout() {
           animation: 'slide_from_right',
         }}
       />
+      <Stack.Screen
+        name="plant/edit/[id]"
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
     </Stack>
   );
 }

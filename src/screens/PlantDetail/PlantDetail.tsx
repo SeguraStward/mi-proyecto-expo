@@ -1,65 +1,32 @@
 /**
  * ============================================================================
- * PlantDetail — Ficha técnica con estética de diálogo RPG
+ * PlantDetail — Ficha tecnica con estetica de dialogo RPG
  * ============================================================================
  *
- * Propósito:
- *   Pantalla de detalle de una planta con diseño inspirado en cuadros de
- *   diálogo de videojuegos retro 8-bit/16-bit. Muestra stats, descripción
+ * Proposito:
+ *   Pantalla de detalle de una planta con diseno inspirado en cuadros de
+ *   dialogo de videojuegos retro 8-bit/16-bit. Muestra stats, descripcion
  *   y acciones dentro de "cajas de texto" con borde grueso.
- *
- * Navegación:
- *   Recibe parámetros via Stack route params (id, name, emoji, etc.).
- *   Botón "Volver" regresa al GardenHome.
- *
- * Accesibilidad:
- *   - Headings semánticos
- *   - Botones con labels descriptivos
- *   - Contraste WCAG AA
+ *   Carga datos reales de Firestore.
  *
  * @see src/screens/GardenHome/GardenHome.tsx
  * ============================================================================
  */
 
 import { RetroButton } from '@/src/components/ui';
+import { usePlantDetail } from '@/src/hooks/usePlantDetail';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-
-// ── Datos de stats mock para cada planta ──────────────────────────────────────
-
-interface PlantStats {
-  water: number;     // 0-100
-  sunlight: number;  // 0-100
-  difficulty: number; // 0-100
-  growth: number;    // 0-100
-}
-
-const PLANT_STATS: Record<string, PlantStats> = {
-  '1': { water: 60, sunlight: 40, difficulty: 30, growth: 75 },
-  '2': { water: 15, sunlight: 90, difficulty: 10, growth: 20 },
-  '3': { water: 40, sunlight: 80, difficulty: 35, growth: 60 },
-  '4': { water: 85, sunlight: 30, difficulty: 55, growth: 50 },
-  '5': { water: 50, sunlight: 95, difficulty: 15, growth: 90 },
-  '6': { water: 45, sunlight: 50, difficulty: 80, growth: 10 },
-};
-
-const PLANT_TIPS: Record<string, string[]> = {
-  '1': ['Regar 2x por semana', 'Limpiar hojas con paño', 'Rotar cada 15 días'],
-  '2': ['Regar 1x cada 2 semanas', 'Pleno sol directo', 'Sustrato drenante'],
-  '3': ['Podar después de floración', 'Suelo calcáreo', 'Mucho sol'],
-  '4': ['Mantener humedad alta', 'Sombra parcial', 'Nebulizar a diario'],
-  '5': ['Regar a diario en verano', 'Sol directo 6h+', 'Tutor cuando crece'],
-  '6': ['Podar ramas nuevas', 'Regar por inmersión', 'Luz indirecta brillante'],
-};
 
 // ── Componente ────────────────────────────────────────────────────────────────
 
@@ -75,12 +42,44 @@ export default function PlantDetail() {
     level: string;
   }>();
 
-  const stats = PLANT_STATS[params.id] ?? { water: 50, sunlight: 50, difficulty: 50, growth: 50 };
-  const tips = PLANT_TIPS[params.id] ?? ['Sin consejos disponibles'];
+  const { plant, isLoading, error } = usePlantDetail(params.id);
+
+  if (isLoading) {
+    return (
+      <View style={[s.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  // Usar datos de Firestore si disponibles, fallback a params
+  const plantName = plant?.nickname ?? plant?.botanicalInfo?.commonName ?? params.name ?? 'Planta';
+  const scientificName = plant?.botanicalInfo?.scientificName ?? '';
+  const description = plant?.botanicalInfo?.origin
+    ? `Origen: ${plant.botanicalInfo.origin}. Clima: ${plant.botanicalInfo.climate ?? 'N/A'}. Familia: ${plant.botanicalInfo.family ?? 'N/A'}.`
+    : params.description ?? 'Informacion no disponible para esta especie.';
+
+  // Stats de Firestore
+  const waterLevel = plant?.status?.waterLevel ?? 50;
+  const careStreak = plant?.status?.careStreak ?? 0;
+  const healthMap: Record<string, number> = { excelente: 100, buena: 75, regular: 50, mala: 25 };
+  const healthValue = healthMap[plant?.status?.health ?? 'buena'] ?? 50;
+  const heightCm = plant?.status?.currentHeightCm ?? 0;
+
+  // Tips generados de care rules
+  const tips: string[] = [];
+  if (plant?.careRules) {
+    tips.push(`Regar cada ${plant.careRules.wateringFrequencyDays} dias`);
+    if (plant.careRules.sunlight) tips.push(`Luz: ${plant.careRules.sunlight}`);
+    if (plant.careRules.humidity) tips.push(`Humedad: ${plant.careRules.humidity}`);
+    if (plant.careRules.soilType) tips.push(`Suelo: ${plant.careRules.soilType}`);
+    if (plant.careRules.pruningSeason) tips.push(`Poda: ${plant.careRules.pruningSeason}`);
+  }
+  if (tips.length === 0) tips.push('Sin consejos disponibles');
 
   return (
     <ScrollView style={s.container} contentContainerStyle={s.content}>
-      {/* ── Botón Volver ──────────────────────── */}
+      {/* ── Boton Volver ──────────────────────── */}
       <RetroButton
         label="< Volver"
         variant="outlined"
@@ -92,37 +91,38 @@ export default function PlantDetail() {
       <View style={s.spriteBox}>
         <View style={s.spriteIconSlot}>
           <MaterialCommunityIcons
-            name={(params.iconName as any) ?? 'leaf'}
+            name={(params.iconName as keyof typeof MaterialCommunityIcons.glyphMap) ?? 'leaf'}
             size={36}
             color={theme.colors.primary}
           />
         </View>
         <View style={s.spriteInfo}>
-          <Text style={s.spriteName}>{params.name ?? 'Planta'}</Text>
-          <Text style={s.spriteLevel}>Lv. {params.level ?? '1'}</Text>
+          <Text style={s.spriteName}>{plantName}</Text>
+          {scientificName ? (
+            <Text style={s.spriteLevel}>{scientificName}</Text>
+          ) : (
+            <Text style={s.spriteLevel}>Lv. {params.level ?? '1'}</Text>
+          )}
         </View>
       </View>
 
-      {/* ── Caja de diálogo: Descripción ──────── */}
+      {/* ── Caja de dialogo: Descripcion ──────── */}
       <View style={s.dialogueBox}>
         <Text style={s.dialogueLabel}>{'> DESCRIPCION'}</Text>
-        <Text style={s.dialogueText}>
-          {params.description ?? 'Información no disponible para esta especie.'}
-        </Text>
-        {/* Cursor parpadeante decorativo */}
-        <Text style={s.cursor}>▼</Text>
+        <Text style={s.dialogueText}>{description}</Text>
+        <Text style={s.cursor}>{'▼'}</Text>
       </View>
 
       {/* ── Stats Panel (barras tipo RPG) ─────── */}
       <View style={s.statsPanel}>
         <Text style={s.statsPanelTitle}>{'// STATS'}</Text>
-        <StatBar label="AGUA" value={stats.water} color={theme.colors.info} theme={theme} />
-        <StatBar label="SOL" value={stats.sunlight} color={theme.colors.warning} theme={theme} />
-        <StatBar label="DIFIC" value={stats.difficulty} color={theme.colors.error} theme={theme} />
-        <StatBar label="CREC" value={stats.growth} color={theme.colors.primary} theme={theme} />
+        <StatBar label="AGUA" value={waterLevel} color={theme.colors.info} theme={theme} />
+        <StatBar label="SALUD" value={healthValue} color={theme.colors.primary} theme={theme} />
+        <StatBar label="RACHA" value={Math.min(careStreak * 10, 100)} color={theme.colors.warning} theme={theme} />
+        <StatBar label="ALTO" value={Math.min(heightCm, 100)} color={theme.colors.secondary} theme={theme} />
       </View>
 
-      {/* ── Consejos (estilo tierra/café) ──── */}
+      {/* ── Consejos (estilo tierra/cafe) ──── */}
       <View style={s.consoleBox}>
         <Text style={s.consoleTitle}>{'CONSEJOS'}</Text>
         {tips.map((tip, i) => (
@@ -135,17 +135,23 @@ export default function PlantDetail() {
       {/* ── Acciones ──────────────────────────── */}
       <View style={s.actions}>
         <RetroButton
-          label="Regar"
-          onPress={() => {}}
+          label="Editar"
+          onPress={() => router.push(`/(app)/plant/edit/${params.id}`)}
           style={s.actionButton}
         />
         <RetroButton
-          label="Foto"
+          label="Volver"
           variant="outlined"
-          onPress={() => {}}
+          onPress={() => router.back()}
           style={s.actionButton}
         />
       </View>
+
+      {error && (
+        <Text style={s.errorHint}>
+          Datos de Firestore no disponibles. Mostrando datos basicos.
+        </Text>
+      )}
     </ScrollView>
   );
 }
@@ -236,7 +242,7 @@ function getStyles(t: AppTheme) {
       color: t.colors.secondary,
     },
 
-    // ── Caja de diálogo RPG ──────────────────────
+    // ── Caja de dialogo RPG ──────────────────────
     dialogueBox: {
       backgroundColor: t.colors.surface,
       borderWidth: t.borderWidths.thick,
@@ -314,7 +320,7 @@ function getStyles(t: AppTheme) {
       textAlign: 'right',
     },
 
-    // ── Caja de consejos (estilo tierra/café) ────
+    // ── Caja de consejos (estilo tierra/cafe) ────
     consoleBox: {
       backgroundColor: '#795548',
       borderWidth: t.borderWidths.thick,
@@ -322,7 +328,6 @@ function getStyles(t: AppTheme) {
       borderRadius: t.radius.md,
       padding: t.spacing.lg,
       marginBottom: t.spacing.xl,
-      // Sombra sólida marrón oscuro
       shadowColor: '#3E2723',
       shadowOffset: { width: 2, height: 2 },
       shadowOpacity: 1,
@@ -350,6 +355,15 @@ function getStyles(t: AppTheme) {
     },
     actionButton: {
       flex: 1,
+    },
+
+    // ── Error hint ──────────────────────────────
+    errorHint: {
+      fontFamily: t.typography.fontFamilyMono,
+      fontSize: t.typography.sizes.caption,
+      color: t.colors.textMuted,
+      textAlign: 'center',
+      marginTop: t.spacing.md,
     },
   });
 }
