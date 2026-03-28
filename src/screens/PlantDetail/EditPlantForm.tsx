@@ -46,7 +46,7 @@ export default function EditPlantForm() {
 
   const { control, handleSubmit, reset, formState: { isDirty } } = useForm<PlantEditFormInput>({
     resolver: zodResolver(plantEditSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
     defaultValues: {
       nickname: defaultName ?? '',
       wateringFrequencyDays: defaultWatering ?? '7',
@@ -77,9 +77,10 @@ export default function EditPlantForm() {
 
   const onSubmit = async (data: PlantEditFormInput) => {
     if (!id) return;
+    // zodResolver ya transformo strings a numeros — usamos data directamente
+    const parsed = data as unknown as import('@/src/schemas/plant.schema').PlantEditFormData;
     setIsSaving(true);
     try {
-      const parsed = plantEditSchema.parse(data);
       await upsertPlant(id, {
         userId: user?.uid ?? '',
         nickname: parsed.nickname,
