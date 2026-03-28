@@ -7,6 +7,7 @@ WebBrowser.maybeCompleteAuthSession();
 export function useGoogleAuth() {
   const [, response, promptAsync] = Google.useIdTokenAuthRequest({
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? '',
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '',
   });
 
   return { response, promptAsync };

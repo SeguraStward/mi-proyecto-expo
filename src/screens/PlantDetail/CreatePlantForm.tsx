@@ -1,21 +1,17 @@
 /**
- * EditPlantForm — Formulario de edicion de datos de una planta.
- *
- * Carga datos existentes de Firestore, permite editar y valida con Zod.
- * Usa upsertPlant para crear o actualizar el documento.
+ * CreatePlantForm — Formulario para agregar una nueva planta a Firestore.
  */
 
 import { FormInput } from '@/src/components/ui';
 import { useAuth } from '@/src/context/AuthContext';
 import { useToast } from '@/src/context/ToastContext';
-import { usePlantDetail } from '@/src/hooks/usePlantDetail';
-import { plantEditSchema, type PlantEditFormInput } from '@/src/schemas/plant.schema';
-import { upsertPlant } from '@/src/services/firestore';
+import { plantCreateSchema, type PlantCreateFormInput } from '@/src/schemas/plant.schema';
+import { createPlant } from '@/src/services/firestore';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   ActivityIndicator,
@@ -28,100 +24,79 @@ import {
   View,
 } from 'react-native';
 
-export default function EditPlantForm() {
+export default function CreatePlantForm() {
   const theme = useAppTheme();
   const s = getStyles(theme);
   const router = useRouter();
   const { user } = useAuth();
-  const { id, defaultName, defaultSunlight, defaultWatering } =
-    useLocalSearchParams<{
-      id: string;
-      defaultName?: string;
-      defaultSunlight?: string;
-      defaultWatering?: string;
-    }>();
-  const { plant, isLoading } = usePlantDetail(id);
   const { showToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
-  const { control, handleSubmit, reset, formState: { isDirty } } = useForm<PlantEditFormInput>({
-    resolver: zodResolver(plantEditSchema),
+  const { control, handleSubmit } = useForm<PlantCreateFormInput>({
+    resolver: zodResolver(plantCreateSchema),
     mode: 'onBlur',
     defaultValues: {
-      nickname: defaultName ?? '',
-      wateringFrequencyDays: defaultWatering ?? '7',
-      sunlight: defaultSunlight ?? '',
+      nickname: '',
+      commonName: '',
+      scientificName: '',
+      wateringFrequencyDays: '7',
+      sunlight: '',
       humidity: '',
       soilType: '',
-      pruningSeason: '',
-      currentHeightCm: '',
-      potSizeCm: '',
     },
   });
 
-  // Sobrescribir defaults cuando llegan datos reales de Firestore
-  useEffect(() => {
-    if (plant) {
-      reset({
-        nickname: plant.nickname ?? defaultName ?? '',
-        wateringFrequencyDays: String(plant.careRules?.wateringFrequencyDays ?? defaultWatering ?? 7),
-        sunlight: plant.careRules?.sunlight ?? defaultSunlight ?? '',
-        humidity: plant.careRules?.humidity ?? '',
-        soilType: plant.careRules?.soilType ?? '',
-        pruningSeason: plant.careRules?.pruningSeason ?? '',
-        currentHeightCm: plant.status?.currentHeightCm != null ? String(plant.status.currentHeightCm) : '',
-        potSizeCm: plant.status?.potSizeCm != null ? String(plant.status.potSizeCm) : '',
-      });
-    }
-  }, [plant, reset, defaultName, defaultSunlight, defaultWatering]);
-
-  const onSubmit = async (data: PlantEditFormInput) => {
-    if (!id) return;
+  const onSubmit = async (data: PlantCreateFormInput) => {
+    if (!user?.uid) return;
     setIsSaving(true);
     try {
-      const parsed = plantEditSchema.parse(data);
-      await upsertPlant(id, {
-        userId: user?.uid ?? '',
+      const parsed = plantCreateSchema.parse(data);
+      const now = new Date().toISOString();
+      await createPlant({
+        userId: user.uid,
         nickname: parsed.nickname,
+        photos: [],
+        botanicalInfo: {
+          commonName: parsed.commonName,
+          scientificName: parsed.scientificName ?? '',
+          family: '',
+          origin: '',
+          climate: '',
+          toxicity: 'No toxica',
+          maxHeight: '',
+          growthRate: '',
+        },
         careRules: {
           wateringFrequencyDays: parsed.wateringFrequencyDays,
           sunlight: parsed.sunlight,
-          humidity: parsed.humidity ?? plant?.careRules?.humidity ?? '',
-          fertilizerFrequencyDays: plant?.careRules?.fertilizerFrequencyDays ?? 30,
-          soilType: parsed.soilType ?? plant?.careRules?.soilType ?? '',
-          pruningSeason: parsed.pruningSeason ?? plant?.careRules?.pruningSeason ?? '',
-          rotationFrequencyDays: plant?.careRules?.rotationFrequencyDays ?? 15,
+          humidity: parsed.humidity ?? '',
+          fertilizerFrequencyDays: 30,
+          soilType: parsed.soilType ?? '',
+          pruningSeason: '',
+          rotationFrequencyDays: 15,
         },
         status: {
-          ...(plant?.status ?? {
-            ageInMonths: 0,
-            health: 'buena',
-            careStreak: 0,
-            waterLevel: 50,
-            lastWateredAt: new Date().toISOString(),
-            nextWateringDue: new Date().toISOString(),
-          }),
-          currentHeightCm: parsed.currentHeightCm ?? plant?.status?.currentHeightCm ?? 0,
-          potSizeCm: parsed.potSizeCm ?? plant?.status?.potSizeCm ?? 0,
+          ageInMonths: 0,
+          currentHeightCm: 0,
+          potSizeCm: 0,
+          health: 'buena',
+          careStreak: 0,
+          waterLevel: 50,
+          lastWateredAt: now,
+          nextWateringDue: now,
         },
+        createdAt: now,
+        updatedAt: now,
       });
-      showToast({ type: 'success', message: 'Planta actualizada correctamente' });
+      showToast({ type: 'success', message: 'Planta agregada al jardin!' });
       router.back();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error al guardar';
+      const msg = e instanceof Error ? e.message : 'Error al crear planta';
       showToast({ type: 'error', message: msg });
     } finally {
       setIsSaving(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <View style={[s.container, s.center]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
-  }
 
   return (
     <KeyboardAvoidingView
@@ -136,18 +111,14 @@ export default function EditPlantForm() {
         <View style={s.header}>
           <Pressable
             onPress={() => router.back()}
+            style={s.backBtn}
             accessibilityRole="button"
             accessibilityLabel="Volver"
-            style={s.backBtn}
           >
             <Text style={[s.backText, { color: theme.colors.primary }]}>{'< VOLVER'}</Text>
           </Pressable>
-          <Text style={s.title}>EDITAR PLANTA</Text>
-          {plant && (
-            <Text style={s.subtitle}>
-              {plant.botanicalInfo?.commonName ?? plant.nickname}
-            </Text>
-          )}
+          <Text style={s.title}>NUEVA PLANTA</Text>
+          <Text style={s.subtitle}>Agrega una planta a tu jardin</Text>
         </View>
 
         <View style={s.section}>
@@ -156,20 +127,33 @@ export default function EditPlantForm() {
             control={control}
             name="nickname"
             label="APODO"
-            placeholder="Nombre de tu planta"
+            placeholder="Ej: Mi Monstera"
+            autoCapitalize="words"
+          />
+          <FormInput
+            control={control}
+            name="commonName"
+            label="NOMBRE COMUN"
+            placeholder="Ej: Monstera, Cactus Barril..."
+            autoCapitalize="words"
+          />
+          <FormInput
+            control={control}
+            name="scientificName"
+            label="NOMBRE CIENTIFICO (OPCIONAL)"
+            placeholder="Ej: Monstera deliciosa"
             autoCapitalize="words"
           />
         </View>
 
         <View style={s.section}>
-          <Text style={s.sectionTitle}>REGLAS DE CUIDADO</Text>
+          <Text style={s.sectionTitle}>CUIDADOS</Text>
           <FormInput
             control={control}
             name="wateringFrequencyDays"
-            label="FRECUENCIA DE RIEGO (DIAS)"
+            label="CADA CUANTOS DIAS REGARLA"
             placeholder="7"
             keyboardType="numeric"
-            helperText="Cada cuantos dias regarla"
           />
           <FormInput
             control={control}
@@ -180,60 +164,36 @@ export default function EditPlantForm() {
           <FormInput
             control={control}
             name="humidity"
-            label="HUMEDAD"
+            label="HUMEDAD (OPCIONAL)"
             placeholder="Alta, media, baja..."
           />
           <FormInput
             control={control}
             name="soilType"
-            label="TIPO DE SUELO"
-            placeholder="Universal, drenante, acido..."
-          />
-          <FormInput
-            control={control}
-            name="pruningSeason"
-            label="TEMPORADA DE PODA"
-            placeholder="Primavera, verano..."
-          />
-        </View>
-
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>ESTADO ACTUAL</Text>
-          <FormInput
-            control={control}
-            name="currentHeightCm"
-            label="ALTURA ACTUAL (CM)"
-            placeholder="30"
-            keyboardType="numeric"
-          />
-          <FormInput
-            control={control}
-            name="potSizeCm"
-            label="TAMANO DE MACETA (CM)"
-            placeholder="20"
-            keyboardType="numeric"
+            label="TIPO DE SUELO (OPCIONAL)"
+            placeholder="Universal, drenante..."
           />
         </View>
 
         <View style={s.actions}>
           <Pressable
-            style={[s.btn, s.btnSave, !isDirty && s.btnDisabled]}
+            style={[s.btn, s.btnSave]}
             onPress={handleSubmit(onSubmit)}
-            disabled={isSaving || !isDirty}
+            disabled={isSaving}
             accessibilityRole="button"
-            accessibilityLabel="Guardar cambios"
+            accessibilityLabel="Agregar planta"
           >
             {isSaving ? (
               <ActivityIndicator size="small" color={theme.colors.textOnPrimary} />
             ) : (
-              <Text style={s.btnSaveText}>GUARDAR</Text>
+              <Text style={s.btnSaveText}>+ AGREGAR PLANTA</Text>
             )}
           </Pressable>
           <Pressable
             style={[s.btn, s.btnCancel]}
             onPress={() => router.back()}
             accessibilityRole="button"
-            accessibilityLabel="Cancelar edicion"
+            accessibilityLabel="Cancelar"
           >
             <Text style={s.btnCancelText}>CANCELAR</Text>
           </Pressable>
@@ -246,7 +206,6 @@ export default function EditPlantForm() {
 function getStyles(t: AppTheme) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: t.colors.background },
-    center: { justifyContent: 'center', alignItems: 'center' },
     scrollContent: { padding: t.spacing.lg, paddingTop: 56, paddingBottom: t.spacing['5xl'] },
     header: { marginBottom: t.spacing['2xl'] },
     backBtn: { marginBottom: t.spacing.md, minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
@@ -283,6 +242,5 @@ function getStyles(t: AppTheme) {
     btnSaveText: { fontFamily: t.typography.fontFamily, fontSize: t.typography.sizes.overline, color: t.colors.textOnPrimary, letterSpacing: 1 },
     btnCancel: { backgroundColor: t.colors.surface, borderColor: t.colors.border },
     btnCancelText: { fontFamily: t.typography.fontFamily, fontSize: t.typography.sizes.overline, color: t.colors.textSecondary, letterSpacing: 1 },
-    btnDisabled: { opacity: 0.5 },
   });
 }

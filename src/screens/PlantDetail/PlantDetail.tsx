@@ -136,7 +136,15 @@ export default function PlantDetail() {
       <View style={s.actions}>
         <RetroButton
           label="Editar"
-          onPress={() => router.push(`/(app)/plant/edit/${params.id}`)}
+          onPress={() => router.push({
+            pathname: '/(app)/plant/edit/[id]',
+            params: {
+              id: params.id,
+              defaultName: plantName,
+              defaultSunlight: plant?.careRules?.sunlight ?? '',
+              defaultWatering: String(plant?.careRules?.wateringFrequencyDays ?? 7),
+            },
+          } as any)}
           style={s.actionButton}
         />
         <RetroButton

@@ -15,17 +15,17 @@ export const plantEditSchema = z.object({
     .min(1, 'Campo requerido'),
   humidity: z
     .string()
-    .max(50, 'Maximo 50 caracteres')
+    .max(50)
     .optional()
     .default(''),
   soilType: z
     .string()
-    .max(50, 'Maximo 50 caracteres')
+    .max(50)
     .optional()
     .default(''),
   pruningSeason: z
     .string()
-    .max(50, 'Maximo 50 caracteres')
+    .max(50)
     .optional()
     .default(''),
   currentHeightCm: z
@@ -34,17 +34,52 @@ export const plantEditSchema = z.object({
     .optional()
     .default('')
     .transform((v) => (v === '' ? undefined : Number(v)))
-    .pipe(z.number().min(0, 'Debe ser positivo').optional()),
+    .pipe(z.number().min(0).optional()),
   potSizeCm: z
     .string()
     .regex(/^\d*\.?\d*$/, 'Debe ser un numero')
     .optional()
     .default('')
     .transform((v) => (v === '' ? undefined : Number(v)))
-    .pipe(z.number().min(0, 'Debe ser positivo').optional()),
+    .pipe(z.number().min(0).optional()),
 });
 
 export type PlantEditFormData = z.infer<typeof plantEditSchema>;
-
-/** Input type before transforms (all strings for TextInput). */
 export type PlantEditFormInput = z.input<typeof plantEditSchema>;
+
+export const plantCreateSchema = z.object({
+  nickname: z
+    .string()
+    .min(1, 'Nombre requerido')
+    .max(40, 'Maximo 40 caracteres'),
+  commonName: z
+    .string()
+    .min(1, 'Nombre comun requerido')
+    .max(60),
+  scientificName: z
+    .string()
+    .max(80)
+    .optional()
+    .default(''),
+  wateringFrequencyDays: z
+    .string()
+    .regex(/^\d+$/, 'Debe ser un numero')
+    .transform(Number)
+    .pipe(z.number().int().min(1).max(365)),
+  sunlight: z
+    .string()
+    .min(1, 'Campo requerido'),
+  humidity: z
+    .string()
+    .max(50)
+    .optional()
+    .default(''),
+  soilType: z
+    .string()
+    .max(50)
+    .optional()
+    .default(''),
+});
+
+export type PlantCreateFormData = z.infer<typeof plantCreateSchema>;
+export type PlantCreateFormInput = z.input<typeof plantCreateSchema>;

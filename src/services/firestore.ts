@@ -1,9 +1,11 @@
 import {
+  addDoc,
   collection,
   doc,
   getDoc,
   getDocs,
   query,
+  setDoc,
   updateDoc,
   where,
 } from 'firebase/firestore';
@@ -46,4 +48,24 @@ export async function updatePlant(plantId: string, data: UpdatePlantDTO): Promis
     ...data,
     updatedAt: new Date().toISOString(),
   });
+}
+
+/** Crea el documento si no existe, o lo actualiza si ya existe. */
+export async function upsertPlant(plantId: string, data: Partial<PlantDocument>): Promise<void> {
+  await setDoc(doc(db, 'plants', plantId), {
+    ...data,
+    id: plantId,
+    updatedAt: new Date().toISOString(),
+  }, { merge: true });
+}
+
+/** Crea una nueva planta y retorna su ID generado. */
+export async function createPlant(data: Omit<PlantDocument, 'id'>): Promise<string> {
+  const ref = await addDoc(collection(db, 'plants'), {
+    ...data,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+  await setDoc(ref, { id: ref.id }, { merge: true });
+  return ref.id;
 }

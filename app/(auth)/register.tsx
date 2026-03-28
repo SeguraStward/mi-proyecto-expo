@@ -65,6 +65,7 @@ export default function RegisterScreen() {
       await register(displayName, normalizedEmail, password);
       router.replace('/(app)/(tabs)/profile');
     } catch (error: any) {
+      console.error('Register error:', error?.code, error?.message);
       const code = error?.code as string | undefined;
       const message =
         code === 'auth/email-already-in-use'
