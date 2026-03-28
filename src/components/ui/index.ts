@@ -11,6 +11,8 @@ export type { InputProps } from './Input';
 export { PlantCard } from './PlantCard';
 export { PrimaryButton as Button } from './PrimaryButton';
 export { RetroButton } from './RetroButton';
+export { Toast } from './Toast';
+export type { ToastType } from './Toast';
 export { WateringFrequencyPicker } from './WateringFrequencyPicker';
 export type { WateringFrequency } from './WateringFrequencyPicker';
 

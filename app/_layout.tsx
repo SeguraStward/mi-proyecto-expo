@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 
 import { AuthProvider } from '@/src/context/AuthContext';
 import { AppThemeProvider, useThemeToggle } from '@/src/context/ThemeContext';
+import { ToastProvider } from '@/src/context/ToastContext';
 
 // Mantener splash screen visible mientras cargan las fuentes
 SplashScreen.preventAutoHideAsync();
@@ -75,7 +76,9 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <AppThemeProvider>
-        <RootNavigator />
+        <ToastProvider>
+          <RootNavigator />
+        </ToastProvider>
       </AppThemeProvider>
     </AuthProvider>
   );
