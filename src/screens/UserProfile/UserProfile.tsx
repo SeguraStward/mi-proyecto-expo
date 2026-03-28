@@ -5,7 +5,7 @@
  *
  * Proposito:
  *   Perfil de usuario con cards limpias y toggle compacto de solo iconos.
- *   Seccion Info: stats, bio, planta favorita.
+ *   Seccion Info: stats, bio, boton editar.
  *   Seccion Config: toggles de tema y privacidad.
  *
  * @see docs/DESIGN_SYSTEM_RETRO.md
@@ -18,17 +18,19 @@ import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Alert,
-    Image,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 // ── Constantes ───────────────────────────────────────────────
@@ -38,9 +40,10 @@ type ProfileTab = 'info' | 'settings';
 // ── Componente principal ─────────────────────────────────────
 
 export default function UserProfile() {
-  const { user, togglePrivacy } = useUserProfile();
+  const { userDoc, isLoading, error } = useUserProfile();
   const theme = useAppTheme();
   const { mode, toggleTheme } = useThemeToggle();
+  const router = useRouter();
   const s = getStyles(theme);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProfileTab>('info');
@@ -62,6 +65,22 @@ export default function UserProfile() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <View style={[s.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  if (error || !userDoc) {
+    return (
+      <View style={[s.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={s.errorText}>{error ?? 'No se pudo cargar el perfil'}</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       style={s.container}
@@ -79,9 +98,9 @@ export default function UserProfile() {
         >
           <View style={s.avatarFrame}>
             <Image
-              source={{ uri: avatarUri ?? user.imagen }}
+              source={{ uri: avatarUri ?? userDoc.profile?.avatarUrl ?? 'https://i.pravatar.cc/300' }}
               style={s.avatar}
-              accessibilityLabel={`Foto de perfil de ${user.apodo}`}
+              accessibilityLabel={`Foto de perfil de ${userDoc.username}`}
             />
             <View style={s.cameraBadge}>
               <MaterialCommunityIcons name="camera" size={14} color={theme.colors.textOnPrimary} />
@@ -89,8 +108,8 @@ export default function UserProfile() {
           </View>
         </TouchableOpacity>
 
-        <Text style={s.displayName}>{user.nombre}</Text>
-        <Text style={s.handle}>{user.apodo}</Text>
+        <Text style={s.displayName}>{userDoc.displayName}</Text>
+        <Text style={s.handle}>@{userDoc.username}</Text>
 
         {/* ── Toggle compacto de solo iconos ──────── */}
         <View style={s.togglePill}>
@@ -130,18 +149,18 @@ export default function UserProfile() {
           {/* Stats del jardin */}
           <View style={s.statsGrid}>
             <View style={s.statCard}>
-              <MaterialCommunityIcons name="flower" size={20} color={theme.colors.primary} />
-              <Text style={s.statValue}>{user.cantidadPlantas}</Text>
-              <Text style={s.statLabel}>Plantas</Text>
+              <MaterialCommunityIcons name="star" size={20} color={theme.colors.secondary} />
+              <Text style={s.statValue}>Lv. {userDoc.gamification?.level ?? 1}</Text>
+              <Text style={s.statLabel}>{userDoc.gamification?.levelName ?? 'Semilla'}</Text>
             </View>
             <View style={s.statCard}>
               <MaterialCommunityIcons name="fire" size={20} color={theme.colors.secondary} />
-              <Text style={s.statValue}>{user.racha}</Text>
+              <Text style={s.statValue}>{userDoc.gamification?.dailyStreak ?? 0}</Text>
               <Text style={s.statLabel}>Racha</Text>
             </View>
             <View style={s.statCard}>
               <MaterialCommunityIcons name="account-group" size={20} color={theme.colors.primary} />
-              <Text style={s.statValue}>{user.amigos}</Text>
+              <Text style={s.statValue}>{userDoc.social?.enraizados?.length ?? 0}</Text>
               <Text style={s.statLabel}>Amigos</Text>
             </View>
           </View>
@@ -149,21 +168,34 @@ export default function UserProfile() {
           {/* Bio card */}
           <View style={s.card}>
             <Text style={s.cardTitle}>SOBRE MI</Text>
-            <Text style={s.cardBody}>{user.descripcion}</Text>
+            <Text style={s.cardBody}>
+              {userDoc.profile?.bio || 'Sin descripcion aun.'}
+            </Text>
           </View>
 
-          {/* Planta favorita card */}
-          <View style={s.card}>
-            <View style={s.favRow}>
-              <MaterialCommunityIcons
-                name="star"
-                size={18}
-                color={theme.colors.secondary}
-              />
-              <Text style={s.cardTitle}>PLANTA FAVORITA</Text>
+          {/* Ubicacion card */}
+          {(userDoc.location?.country || userDoc.location?.province) && (
+            <View style={s.card}>
+              <View style={s.favRow}>
+                <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.secondary} />
+                <Text style={s.cardTitle}>UBICACION</Text>
+              </View>
+              <Text style={s.cardBody}>
+                {[userDoc.location.province, userDoc.location.country].filter(Boolean).join(', ')}
+              </Text>
             </View>
-            <Text style={s.favName}>{user.plantaFavorita}</Text>
-          </View>
+          )}
+
+          {/* Boton editar perfil */}
+          <Pressable
+            style={s.editBtn}
+            onPress={() => router.push('/(app)/profile/edit')}
+            accessibilityRole="button"
+            accessibilityLabel="Editar perfil"
+          >
+            <MaterialCommunityIcons name="pencil" size={16} color={theme.colors.textOnPrimary} />
+            <Text style={s.editBtnText}>EDITAR PERFIL</Text>
+          </Pressable>
         </View>
       ) : (
         /* ── CONFIGURACION ── */
@@ -195,36 +227,6 @@ export default function UserProfile() {
               thumbColor={mode === 'dark' ? theme.colors.primary : theme.colors.white}
               accessibilityRole="switch"
               accessibilityLabel="Cambiar entre tema claro y oscuro"
-            />
-          </View>
-
-          {/* Toggle privacidad */}
-          <View style={s.settingRow}>
-            <View style={s.settingInfo}>
-              <MaterialCommunityIcons
-                name={user.privacidad ? 'lock' : 'lock-open-variant'}
-                size={18}
-                color={theme.colors.textSecondary}
-              />
-              <View style={s.settingTexts}>
-                <Text style={s.settingLabel}>Perfil Privado</Text>
-                <Text style={s.settingHint}>
-                  {user.privacidad
-                    ? 'Solo tus amigos ven tu perfil'
-                    : 'Tu perfil es publico'}
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={user.privacidad}
-              onValueChange={togglePrivacy}
-              trackColor={{
-                false: theme.colors.border,
-                true: theme.colors.primarySoft,
-              }}
-              thumbColor={user.privacidad ? theme.colors.primary : theme.colors.white}
-              accessibilityRole="switch"
-              accessibilityLabel="Activar o desactivar perfil privado"
             />
           </View>
         </View>
@@ -389,10 +391,35 @@ function getStyles(t: AppTheme) {
       gap: t.spacing.sm,
       marginBottom: t.spacing.sm,
     },
-    favName: {
+
+    // ── Edit button ────────────────────────────
+    editBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: t.spacing.sm,
+      backgroundColor: t.colors.primary,
+      borderWidth: t.borderWidths.thick,
+      borderColor: t.colors.border,
+      borderRadius: t.radius.md,
+      paddingVertical: t.spacing.lg,
+      minHeight: 52,
+      ...t.elevation.sm,
+    },
+    editBtnText: {
       fontFamily: t.typography.fontFamily,
-      fontSize: t.typography.sizes.subtitle,
-      color: t.colors.textPrimary,
+      fontSize: t.typography.sizes.overline,
+      color: t.colors.textOnPrimary,
+      letterSpacing: 1,
+    },
+
+    // ── Error text ─────────────────────────────
+    errorText: {
+      fontFamily: t.typography.fontFamilyMono,
+      fontSize: t.typography.sizes.body,
+      color: t.colors.error,
+      textAlign: 'center',
+      padding: t.spacing.lg,
     },
 
     // ── Settings container ───────────────────────
