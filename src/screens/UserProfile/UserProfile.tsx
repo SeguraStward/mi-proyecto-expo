@@ -165,7 +165,7 @@ export default function UserProfile() {
             </View>
           </View>
 
-          {/* Bio card */}
+          {/* Bio */}
           <View style={s.card}>
             <Text style={s.cardTitle}>SOBRE MI</Text>
             <Text style={s.cardBody}>
@@ -173,18 +173,49 @@ export default function UserProfile() {
             </Text>
           </View>
 
-          {/* Ubicacion card */}
-          {(userDoc.location?.country || userDoc.location?.province) && (
-            <View style={s.card}>
-              <View style={s.favRow}>
-                <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.secondary} />
-                <Text style={s.cardTitle}>UBICACION</Text>
-              </View>
-              <Text style={s.cardBody}>
-                {[userDoc.location.province, userDoc.location.country].filter(Boolean).join(', ')}
+          {/* Informacion de contacto */}
+          <View style={s.card}>
+            <Text style={s.cardTitle}>CONTACTO</Text>
+            <View style={s.infoRow}>
+              <MaterialCommunityIcons name="instagram" size={16} color={theme.colors.secondary} />
+              <Text style={s.infoLabel}>Instagram</Text>
+              <Text style={s.infoValue}>
+                {userDoc.contactInfo?.instagram ? `@${userDoc.contactInfo.instagram}` : '—'}
               </Text>
             </View>
-          )}
+            <View style={s.infoDivider} />
+            <View style={s.infoRow}>
+              <MaterialCommunityIcons name="whatsapp" size={16} color={theme.colors.secondary} />
+              <Text style={s.infoLabel}>WhatsApp</Text>
+              <Text style={s.infoValue}>
+                {userDoc.contactInfo?.whatsapp || '—'}
+              </Text>
+            </View>
+            <View style={s.infoDivider} />
+            <View style={s.infoRow}>
+              <MaterialCommunityIcons name="account-circle-outline" size={16} color={theme.colors.secondary} />
+              <Text style={s.infoLabel}>Usuario</Text>
+              <Text style={s.infoValue} numberOfLines={1}>
+                @{userDoc.username || '—'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Ubicacion */}
+          <View style={s.card}>
+            <Text style={s.cardTitle}>UBICACION</Text>
+            <View style={s.infoRow}>
+              <MaterialCommunityIcons name="map-marker-outline" size={16} color={theme.colors.secondary} />
+              <Text style={s.infoLabel}>Provincia</Text>
+              <Text style={s.infoValue}>{userDoc.location?.province || '—'}</Text>
+            </View>
+            <View style={s.infoDivider} />
+            <View style={s.infoRow}>
+              <MaterialCommunityIcons name="earth" size={16} color={theme.colors.secondary} />
+              <Text style={s.infoLabel}>Pais</Text>
+              <Text style={s.infoValue}>{userDoc.location?.country || '—'}</Text>
+            </View>
+          </View>
 
           {/* Boton editar perfil */}
           <Pressable
@@ -390,6 +421,32 @@ function getStyles(t: AppTheme) {
       alignItems: 'center',
       gap: t.spacing.sm,
       marginBottom: t.spacing.sm,
+    },
+
+    // ── Filas de informacion ──────────────────────
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.sm,
+      paddingVertical: t.spacing.sm,
+    },
+    infoLabel: {
+      fontFamily: t.typography.fontFamily,
+      fontSize: t.typography.sizes.overline,
+      color: t.colors.textMuted,
+      width: 72,
+      flexShrink: 0,
+    },
+    infoValue: {
+      fontFamily: t.typography.fontFamilyMono,
+      fontSize: t.typography.sizes.body,
+      color: t.colors.textPrimary,
+      flex: 1,
+    },
+    infoDivider: {
+      height: 1,
+      backgroundColor: t.colors.divider,
+      marginLeft: 24,
     },
 
     // ── Edit button ────────────────────────────

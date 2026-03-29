@@ -19,7 +19,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const keyRef = useRef(0);
 
   const showToast = useCallback((config: ToastConfig) => {
-    // Incrementar key para forzar re-mount y nueva animacion
     keyRef.current += 1;
     setToast(config);
     setVisible(true);

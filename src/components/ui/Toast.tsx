@@ -1,14 +1,13 @@
 /**
  * Toast — Notificacion animada con estetica pixel art.
- *
- * Variantes: success (verde), error (rojo), info (azul).
- * Slide-in desde arriba con Reanimated, auto-dismiss configurable.
+ * Usa Modal para garantizar que aparezca sobre todo el contenido,
+ * incluyendo el navigation stack.
  */
 
 import { useAppTheme } from '@/src/theme/designSystem';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -47,32 +46,19 @@ export function Toast({ type, message, visible, onDismiss, duration = 3000 }: To
   const opacity = useSharedValue(0);
 
   const colorMap: Record<ToastType, { bg: string; border: string; icon: string }> = {
-    success: {
-      bg: theme.colors.surface,
-      border: theme.colors.primary,
-      icon: theme.colors.primary,
-    },
-    error: {
-      bg: theme.colors.surface,
-      border: theme.colors.error,
-      icon: theme.colors.error,
-    },
-    info: {
-      bg: theme.colors.surface,
-      border: theme.colors.secondary,
-      icon: theme.colors.secondary,
-    },
+    success: { bg: theme.colors.surface, border: theme.colors.primary, icon: theme.colors.primary },
+    error:   { bg: theme.colors.surface, border: theme.colors.error,   icon: theme.colors.error   },
+    info:    { bg: theme.colors.surface, border: theme.colors.secondary, icon: theme.colors.secondary },
   };
 
   const colors = colorMap[type];
 
   useEffect(() => {
     if (visible) {
-      // Slide in
+      translateY.value = -120;
+      opacity.value = 0;
       translateY.value = withTiming(0, { duration: 300 });
       opacity.value = withTiming(1, { duration: 300 });
-
-      // Auto-dismiss
       opacity.value = withDelay(
         duration,
         withTiming(0, { duration: 300 }, (finished) => {
@@ -80,9 +66,6 @@ export function Toast({ type, message, visible, onDismiss, duration = 3000 }: To
         }),
       );
       translateY.value = withDelay(duration, withTiming(-120, { duration: 300 }));
-    } else {
-      translateY.value = -120;
-      opacity.value = 0;
     }
   }, [visible, duration, onDismiss, translateY, opacity]);
 
@@ -91,68 +74,75 @@ export function Toast({ type, message, visible, onDismiss, duration = 3000 }: To
     opacity: opacity.value,
   }));
 
-  if (!visible) return null;
-
-  const topOffset = Platform.OS === 'web' ? 16 : insets.top + 8;
-
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        animatedStyle,
-        {
-          top: topOffset,
-          backgroundColor: colors.bg,
-          borderColor: colors.border,
-          ...theme.elevation.md,
-        },
-      ]}
-      pointerEvents="box-none"
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      onRequestClose={onDismiss}
     >
-      <Pressable
-        style={styles.content}
-        onPress={onDismiss}
-        accessibilityRole="alert"
-        accessibilityLabel={`${LABEL_MAP[type]}: ${message}`}
-      >
-        <MaterialCommunityIcons
-          name={ICON_MAP[type]}
-          size={22}
-          color={colors.icon}
-          style={styles.icon}
-        />
-        <View style={styles.textContainer}>
-          <Text style={[styles.title, { color: colors.icon }]}>
-            {LABEL_MAP[type]}
-          </Text>
-          <Text
-            style={[styles.message, { color: theme.colors.textPrimary }]}
-            numberOfLines={2}
+      {/* Capa transparente que no bloquea toques excepto en el toast */}
+      <View style={styles.overlay} pointerEvents="box-none">
+        <Animated.View
+          style={[
+            styles.container,
+            animatedStyle,
+            {
+              top: insets.top + 8,
+              backgroundColor: colors.bg,
+              borderColor: colors.border,
+              shadowColor: theme.colors.shadow,
+              shadowOffset: { width: 3, height: 3 },
+              shadowOpacity: 1,
+              shadowRadius: 0,
+              elevation: 8,
+            },
+          ]}
+        >
+          <Pressable
+            style={styles.content}
+            onPress={onDismiss}
+            accessibilityRole="alert"
+            accessibilityLabel={`${LABEL_MAP[type]}: ${message}`}
           >
-            {message}
-          </Text>
-        </View>
-      </Pressable>
-    </Animated.View>
+            <MaterialCommunityIcons name={ICON_MAP[type]} size={22} color={colors.icon} style={styles.icon} />
+            <View style={styles.textContainer}>
+              <Text style={[styles.title, { color: colors.icon }]}>{LABEL_MAP[type]}</Text>
+              <Text style={[styles.message, { color: theme.colors.textPrimary }]} numberOfLines={2}>
+                {message}
+              </Text>
+            </View>
+          </Pressable>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   container: {
-    position: Platform.OS === 'web' ? ('fixed' as any) : 'absolute',
+    position: 'absolute',
     left: 16,
     right: 16,
     borderWidth: 3,
     borderRadius: 4,
     zIndex: 99999,
-    elevation: 99,
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 14,
-    minHeight: 44,
+    minHeight: 52,
   },
   icon: {
     marginRight: 10,
