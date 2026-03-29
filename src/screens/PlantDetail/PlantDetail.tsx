@@ -14,14 +14,19 @@
  */
 
 import { RetroButton } from '@/src/components/ui';
+import { useToast } from '@/src/context/ToastContext';
 import { usePlantDetail } from '@/src/hooks/usePlantDetail';
+import { deletePlant } from '@/src/services/firestore';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -43,6 +48,40 @@ export default function PlantDetail() {
   }>();
 
   const { plant, isLoading, error } = usePlantDetail(params.id);
+  const { showToast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = () => {
+    const doDelete = async () => {
+      if (!params.id) return;
+      setIsDeleting(true);
+      try {
+        await deletePlant(params.id);
+        showToast({ type: 'success', message: 'Planta eliminada' });
+        setTimeout(() => router.back(), 600);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Error al eliminar';
+        showToast({ type: 'error', message: msg });
+      } finally {
+        setIsDeleting(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('¿Eliminar esta planta? Esta accion no se puede deshacer.')) {
+        doDelete();
+      }
+    } else {
+      Alert.alert(
+        'Eliminar planta',
+        '¿Estas seguro? Esta accion no se puede deshacer.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Eliminar', style: 'destructive', onPress: doDelete },
+        ],
+      );
+    }
+  };
 
   if (isLoading) {
     return (
@@ -87,14 +126,34 @@ export default function PlantDetail() {
         style={s.backButton}
       />
 
+      {/* -- Foto grande de la planta -- */}
+      {plant?.photos?.[0]?.url ? (
+        <View style={s.photoContainer}>
+          <Image
+            source={{ uri: plant.photos[0].url }}
+            style={s.photoImage}
+            resizeMode="cover"
+            accessibilityLabel={`Foto de ${plantName}`}
+          />
+        </View>
+      ) : null}
+
       {/* -- Ficha principal (sprite box) -- */}
       <View style={s.spriteBox}>
         <View style={s.spriteIconSlot}>
-          <MaterialCommunityIcons
-            name={(params.iconName as keyof typeof MaterialCommunityIcons.glyphMap) ?? 'leaf'}
-            size={36}
-            color={theme.colors.primary}
-          />
+          {plant?.photos?.[0]?.url ? (
+            <Image
+              source={{ uri: plant.photos[0].url }}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          ) : (
+            <MaterialCommunityIcons
+              name={(params.iconName as keyof typeof MaterialCommunityIcons.glyphMap) ?? 'leaf'}
+              size={36}
+              color={theme.colors.primary}
+            />
+          )}
         </View>
         <View style={s.spriteInfo}>
           <Text style={s.spriteName}>{plantName}</Text>
@@ -155,6 +214,17 @@ export default function PlantDetail() {
         />
       </View>
 
+      {/* ── Eliminar ──────────────────────────── */}
+      <RetroButton
+        label="ELIMINAR PLANTA"
+        variant="outlined"
+        onPress={handleDelete}
+        loading={isDeleting}
+        disabled={isDeleting}
+        style={s.deleteButton}
+        textStyle={s.deleteButtonText}
+      />
+
       {error && (
         <Text style={s.errorHint}>
           Datos de Firestore no disponibles. Mostrando datos basicos.
@@ -201,6 +271,20 @@ function getStyles(t: AppTheme) {
     content: {
       padding: t.spacing.lg,
       paddingBottom: t.spacing['5xl'],
+    },
+
+    // ── Foto grande ────────────────────────────────
+    photoContainer: {
+      borderWidth: t.borderWidths.thick,
+      borderColor: t.colors.border,
+      borderRadius: t.radius.md,
+      overflow: 'hidden',
+      marginBottom: t.spacing.xl,
+      ...t.elevation.md,
+    },
+    photoImage: {
+      width: '100%',
+      aspectRatio: 1,
     },
 
     // ── Volver ───────────────────────────────────
@@ -363,6 +447,13 @@ function getStyles(t: AppTheme) {
     },
     actionButton: {
       flex: 1,
+    },
+    deleteButton: {
+      marginTop: t.spacing.xl,
+      borderColor: t.colors.error,
+    },
+    deleteButtonText: {
+      color: t.colors.error,
     },
 
     // ── Error hint ──────────────────────────────

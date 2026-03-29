@@ -5,6 +5,16 @@ export const plantEditSchema = z.object({
     .string()
     .min(1, 'Nombre requerido')
     .max(40, 'Maximo 40 caracteres'),
+  commonName: z
+    .string()
+    .max(60)
+    .optional()
+    .default(''),
+  scientificName: z
+    .string()
+    .max(80)
+    .optional()
+    .default(''),
   wateringFrequencyDays: z
     .string()
     .regex(/^\d+$/, 'Debe ser un numero')

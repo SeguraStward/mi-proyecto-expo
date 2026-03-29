@@ -58,6 +58,8 @@ export default function EditPlantForm() {
     mode: 'onSubmit',
     defaultValues: {
       nickname: defaultName ?? '',
+      commonName: '',
+      scientificName: '',
       wateringFrequencyDays: defaultWatering ?? '7',
       sunlight: defaultSunlight ?? '',
       humidity: '',
@@ -80,6 +82,8 @@ export default function EditPlantForm() {
     if (plant) {
       reset({
         nickname: plant.nickname ?? defaultName ?? '',
+        commonName: plant.botanicalInfo?.commonName ?? '',
+        scientificName: plant.botanicalInfo?.scientificName ?? '',
         wateringFrequencyDays: String(plant.careRules?.wateringFrequencyDays ?? defaultWatering ?? 7),
         sunlight: plant.careRules?.sunlight ?? defaultSunlight ?? '',
         humidity: plant.careRules?.humidity ?? '',
@@ -105,6 +109,14 @@ export default function EditPlantForm() {
         userId: user?.uid ?? '',
         nickname: parsed.nickname,
         photos,
+        botanicalInfo: {
+          ...(plant?.botanicalInfo ?? {
+            family: '', origin: '', climate: '', toxicity: 'No toxica',
+            maxHeight: '', growthRate: '',
+          }),
+          commonName: parsed.commonName ?? plant?.botanicalInfo?.commonName ?? '',
+          scientificName: parsed.scientificName ?? plant?.botanicalInfo?.scientificName ?? '',
+        },
         careRules: {
           wateringFrequencyDays: parsed.wateringFrequencyDays,
           sunlight: parsed.sunlight,
@@ -128,7 +140,7 @@ export default function EditPlantForm() {
         },
       });
       showToast({ type: 'success', message: 'Planta actualizada correctamente' });
-      router.back();
+      setTimeout(() => router.back(), 600);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al guardar';
       showToast({ type: 'error', message: msg });
@@ -199,6 +211,20 @@ export default function EditPlantForm() {
             name="nickname"
             label="APODO"
             placeholder="Nombre de tu planta"
+            autoCapitalize="words"
+          />
+          <FormInput
+            control={control}
+            name="commonName"
+            label="NOMBRE COMUN"
+            placeholder="Ej: Monstera, Cactus..."
+            autoCapitalize="words"
+          />
+          <FormInput
+            control={control}
+            name="scientificName"
+            label="NOMBRE CIENTIFICO"
+            placeholder="Ej: Monstera deliciosa"
             autoCapitalize="words"
           />
         </View>

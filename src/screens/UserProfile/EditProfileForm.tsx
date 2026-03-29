@@ -86,7 +86,7 @@ export default function EditProfileForm() {
       };
       await updateUser(user.uid, updateData);
       showToast({ type: 'success', message: 'Perfil actualizado correctamente' });
-      router.back();
+      setTimeout(() => router.back(), 600);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al guardar';
       showToast({ type: 'error', message: msg });

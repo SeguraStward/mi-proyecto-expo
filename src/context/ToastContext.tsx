@@ -1,6 +1,5 @@
 import { Toast, type ToastType } from '@/src/components/ui/Toast';
-import React, { createContext, useCallback, useContext, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
 
 interface ToastConfig {
   type: ToastType;
@@ -17,8 +16,11 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<ToastConfig | null>(null);
   const [visible, setVisible] = useState(false);
+  const keyRef = useRef(0);
 
   const showToast = useCallback((config: ToastConfig) => {
+    // Incrementar key para forzar re-mount y nueva animacion
+    keyRef.current += 1;
     setToast(config);
     setVisible(true);
   }, []);
@@ -30,29 +32,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastContext.Provider value={{ showToast }}>
-      <View style={styles.root}>
-        {children}
-        {toast && (
-          <Toast
-            type={toast.type}
-            message={toast.message}
-            visible={visible}
-            onDismiss={handleDismiss}
-            duration={toast.duration}
-          />
-        )}
-      </View>
+      {children}
+      {toast && (
+        <Toast
+          key={keyRef.current}
+          type={toast.type}
+          message={toast.message}
+          visible={visible}
+          onDismiss={handleDismiss}
+          duration={toast.duration}
+        />
+      )}
     </ToastContext.Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    // En web, position fixed para que el toast flote sobre todo el contenido
-    ...(Platform.OS === 'web' ? ({ position: 'relative' } as any) : {}),
-  },
-});
 
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);

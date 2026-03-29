@@ -104,7 +104,7 @@ export default function CreatePlantForm() {
         updatedAt: now,
       });
       showToast({ type: 'success', message: 'Planta agregada al jardin!' });
-      router.back();
+      setTimeout(() => router.back(), 600);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al crear planta';
       showToast({ type: 'error', message: msg });

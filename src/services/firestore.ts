@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -57,6 +58,11 @@ export async function upsertPlant(plantId: string, data: Partial<PlantDocument>)
     id: plantId,
     updatedAt: new Date().toISOString(),
   }, { merge: true });
+}
+
+/** Elimina una planta por su ID. */
+export async function deletePlant(plantId: string): Promise<void> {
+  await deleteDoc(doc(db, 'plants', plantId));
 }
 
 /** Crea una nueva planta y retorna su ID generado. */

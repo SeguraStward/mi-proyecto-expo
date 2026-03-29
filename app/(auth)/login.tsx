@@ -491,11 +491,11 @@ export default function LoginScreen() {
 
               {/* Botón Google */}
               <RetroButton
-                label="[ CONTINUAR CON GOOGLE ]"
+                label="CON GOOGLE"
+                variant="outlined"
                 onPress={handleGoogleLogin}
                 loading={isGoogleSubmitting}
                 disabled={isSubmitting || isGoogleSubmitting}
-                style={{ backgroundColor: theme.colors.surface }}
                 accessibilityLabel="Iniciar sesión con Google"
               />
             </View>

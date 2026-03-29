@@ -68,6 +68,7 @@ export function Toast({ type, message, visible, onDismiss, duration = 3000 }: To
 
   useEffect(() => {
     if (visible) {
+      // Slide in
       translateY.value = withTiming(0, { duration: 300 });
       opacity.value = withTiming(1, { duration: 300 });
 
@@ -92,18 +93,21 @@ export function Toast({ type, message, visible, onDismiss, duration = 3000 }: To
 
   if (!visible) return null;
 
+  const topOffset = Platform.OS === 'web' ? 16 : insets.top + 8;
+
   return (
     <Animated.View
       style={[
         styles.container,
         animatedStyle,
         {
-          top: Platform.OS === 'web' ? 16 : insets.top + 8,
+          top: topOffset,
           backgroundColor: colors.bg,
           borderColor: colors.border,
-          ...theme.elevation.sm,
+          ...theme.elevation.md,
         },
       ]}
+      pointerEvents="box-none"
     >
       <Pressable
         style={styles.content}
@@ -140,7 +144,8 @@ const styles = StyleSheet.create({
     right: 16,
     borderWidth: 3,
     borderRadius: 4,
-    zIndex: 9999,
+    zIndex: 99999,
+    elevation: 99,
   },
   content: {
     flexDirection: 'row',
