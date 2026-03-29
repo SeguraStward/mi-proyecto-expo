@@ -68,9 +68,8 @@ export default function PlantDetail() {
     };
 
     if (Platform.OS === 'web') {
-      if (window.confirm('¿Eliminar esta planta? Esta accion no se puede deshacer.')) {
-        doDelete();
-      }
+      const confirmed = (globalThis as any).confirm?.('¿Eliminar esta planta? Esta accion no se puede deshacer.');
+      if (confirmed) doDelete();
     } else {
       Alert.alert(
         'Eliminar planta',

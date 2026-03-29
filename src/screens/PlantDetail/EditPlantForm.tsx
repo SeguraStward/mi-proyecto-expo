@@ -10,7 +10,7 @@ import { useAuth } from '@/src/context/AuthContext';
 import { useToast } from '@/src/context/ToastContext';
 import { usePlantDetail } from '@/src/hooks/usePlantDetail';
 import { plantEditSchema, type PlantEditFormInput } from '@/src/schemas/plant.schema';
-import { upsertPlant } from '@/src/services/firestore';
+import { uploadPlantPhoto, upsertPlant } from '@/src/services/firestore';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
 import { pickImage } from '@/src/utils/pickImage';
@@ -47,13 +47,17 @@ export default function EditPlantForm() {
   const { showToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoChanged, setPhotoChanged] = useState(false);
 
   const handlePickImage = async () => {
     const uri = await pickImage();
-    if (uri) setPhotoUri(uri);
+    if (uri) {
+      setPhotoUri(uri);
+      setPhotoChanged(true);
+    }
   };
 
-  const { control, handleSubmit, reset, formState: { isDirty } } = useForm<PlantEditFormInput>({
+  const { control, handleSubmit, reset, formState: { isDirty: isFormDirty } } = useForm<PlantEditFormInput>({
     resolver: zodResolver(plantEditSchema) as any,
     mode: 'onSubmit',
     defaultValues: {
@@ -102,8 +106,13 @@ export default function EditPlantForm() {
     setIsSaving(true);
     try {
       const now = new Date().toISOString();
-      const photos = photoUri
-        ? [{ url: photoUri, isPrimary: true, caption: '', takenAt: now }]
+      // Si la foto cambio, subirla a Storage y obtener URL permanente
+      let resolvedPhotoUrl = photoUri;
+      if (photoUri && !photoUri.startsWith('https://')) {
+        resolvedPhotoUrl = await uploadPlantPhoto(id, photoUri);
+      }
+      const photos = resolvedPhotoUrl
+        ? [{ url: resolvedPhotoUrl, isPrimary: true, caption: '', takenAt: now }]
         : (plant?.photos ?? []);
       await upsertPlant(id, {
         userId: user?.uid ?? '',
@@ -285,9 +294,9 @@ export default function EditPlantForm() {
 
         <View style={s.actions}>
           <Pressable
-            style={[s.btn, s.btnSave, !isDirty && s.btnDisabled]}
+            style={[s.btn, s.btnSave, !isFormDirty && !photoChanged && s.btnDisabled]}
             onPress={handleSubmit(onSubmit)}
-            disabled={isSaving || !isDirty}
+            disabled={isSaving || (!isFormDirty && !photoChanged)}
             accessibilityRole="button"
             accessibilityLabel="Guardar cambios"
           >

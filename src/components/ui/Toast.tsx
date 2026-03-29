@@ -13,6 +13,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -57,15 +58,19 @@ export function Toast({ type, message, visible, onDismiss, duration = 3000 }: To
     if (visible) {
       translateY.value = -120;
       opacity.value = 0;
-      translateY.value = withTiming(0, { duration: 300 });
-      opacity.value = withTiming(1, { duration: 300 });
-      opacity.value = withDelay(
-        duration,
-        withTiming(0, { duration: 300 }, (finished) => {
-          if (finished) runOnJS(onDismiss)();
-        }),
+      translateY.value = withSequence(
+        withTiming(0, { duration: 300 }),
+        withDelay(duration, withTiming(-120, { duration: 300 })),
       );
-      translateY.value = withDelay(duration, withTiming(-120, { duration: 300 }));
+      opacity.value = withSequence(
+        withTiming(1, { duration: 300 }),
+        withDelay(
+          duration,
+          withTiming(0, { duration: 300 }, (finished) => {
+            if (finished) runOnJS(onDismiss)();
+          }),
+        ),
+      );
     }
   }, [visible, duration, onDismiss, translateY, opacity]);
 

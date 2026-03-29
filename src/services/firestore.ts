@@ -10,10 +10,11 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes, uploadString } from 'firebase/storage';
 
 import type { PlantDocument, UpdatePlantDTO } from '@/src/types-dtos/plant.types';
 import type { UpdateUserDTO, UserDocument } from '@/src/types-dtos/user.types';
-import { db } from './firebase';
+import { db, storage } from './firebase';
 
 // ── Users ───────────────────────────────────────────────────────────────
 
@@ -58,6 +59,26 @@ export async function upsertPlant(plantId: string, data: Partial<PlantDocument>)
     id: plantId,
     updatedAt: new Date().toISOString(),
   }, { merge: true });
+}
+
+/**
+ * Sube una foto al Firebase Storage y retorna la URL de descarga permanente.
+ * Funciona con URIs locales (file://) y data URLs (base64) de cualquier plataforma.
+ */
+export async function uploadPlantPhoto(plantId: string, photoUri: string): Promise<string> {
+  const photoRef = ref(storage, `plants/${plantId}/${Date.now()}.jpg`);
+
+  if (photoUri.startsWith('data:')) {
+    // Web: base64 data URL — uploadString es el metodo correcto para este formato
+    await uploadString(photoRef, photoUri, 'data_url');
+  } else {
+    // Native: file:// URI — convertir a blob con fetch
+    const response = await fetch(photoUri);
+    const blob = await response.blob();
+    await uploadBytes(photoRef, blob);
+  }
+
+  return getDownloadURL(photoRef);
 }
 
 /** Elimina una planta por su ID. */

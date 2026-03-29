@@ -178,7 +178,6 @@ export default function UserProfile() {
             <Text style={s.cardTitle}>CONTACTO</Text>
             <View style={s.infoRow}>
               <MaterialCommunityIcons name="instagram" size={16} color={theme.colors.secondary} />
-              <Text style={s.infoLabel}>Instagram</Text>
               <Text style={s.infoValue}>
                 {userDoc.contactInfo?.instagram ? `@${userDoc.contactInfo.instagram}` : '—'}
               </Text>
@@ -186,7 +185,6 @@ export default function UserProfile() {
             <View style={s.infoDivider} />
             <View style={s.infoRow}>
               <MaterialCommunityIcons name="whatsapp" size={16} color={theme.colors.secondary} />
-              <Text style={s.infoLabel}>WhatsApp</Text>
               <Text style={s.infoValue}>
                 {userDoc.contactInfo?.whatsapp || '—'}
               </Text>
@@ -194,7 +192,6 @@ export default function UserProfile() {
             <View style={s.infoDivider} />
             <View style={s.infoRow}>
               <MaterialCommunityIcons name="account-circle-outline" size={16} color={theme.colors.secondary} />
-              <Text style={s.infoLabel}>Usuario</Text>
               <Text style={s.infoValue} numberOfLines={1}>
                 @{userDoc.username || '—'}
               </Text>
@@ -206,13 +203,11 @@ export default function UserProfile() {
             <Text style={s.cardTitle}>UBICACION</Text>
             <View style={s.infoRow}>
               <MaterialCommunityIcons name="map-marker-outline" size={16} color={theme.colors.secondary} />
-              <Text style={s.infoLabel}>Provincia</Text>
               <Text style={s.infoValue}>{userDoc.location?.province || '—'}</Text>
             </View>
             <View style={s.infoDivider} />
             <View style={s.infoRow}>
               <MaterialCommunityIcons name="earth" size={16} color={theme.colors.secondary} />
-              <Text style={s.infoLabel}>Pais</Text>
               <Text style={s.infoValue}>{userDoc.location?.country || '—'}</Text>
             </View>
           </View>

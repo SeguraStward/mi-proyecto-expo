@@ -6,7 +6,7 @@ import { FormInput } from '@/src/components/ui';
 import { useAuth } from '@/src/context/AuthContext';
 import { useToast } from '@/src/context/ToastContext';
 import { plantCreateSchema, type PlantCreateFormInput } from '@/src/schemas/plant.schema';
-import { createPlant } from '@/src/services/firestore';
+import { createPlant, uploadPlantPhoto, upsertPlant } from '@/src/services/firestore';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
 import { pickImage } from '@/src/utils/pickImage';
@@ -65,12 +65,11 @@ export default function CreatePlantForm() {
     setIsSaving(true);
     try {
       const now = new Date().toISOString();
-      await createPlant({
+      // Crear planta primero (sin foto) para obtener el ID
+      const plantId = await createPlant({
         userId: user.uid,
         nickname: parsed.nickname,
-        photos: photoUri
-          ? [{ url: photoUri, isPrimary: true, caption: '', takenAt: now }]
-          : [],
+        photos: [],
         botanicalInfo: {
           commonName: parsed.commonName,
           scientificName: parsed.scientificName ?? '',
@@ -103,6 +102,13 @@ export default function CreatePlantForm() {
         createdAt: now,
         updatedAt: now,
       });
+      // Si hay foto, subirla a Storage y actualizar la planta con la URL permanente
+      if (photoUri) {
+        const photoUrl = await uploadPlantPhoto(plantId, photoUri);
+        await upsertPlant(plantId, {
+          photos: [{ url: photoUrl, isPrimary: true, caption: '', takenAt: now }],
+        });
+      }
       showToast({ type: 'success', message: 'Planta agregada al jardin!' });
       setTimeout(() => router.back(), 600);
     } catch (e) {

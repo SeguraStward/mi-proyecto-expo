@@ -136,3 +136,6 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 python seed_firestore.py --credentials ./serviceAccountKey.json
 ```
+
+## Salvatantas tresmil
+npx expo start --tunnel --clear
