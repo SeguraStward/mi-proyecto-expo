@@ -1,141 +1,174 @@
-# Welcome to your Expo app 👋
+# Retro Garden
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App móvil de inventario de plantas con estética RPG/pixel art (Stardew Valley). Permite registrar tus plantas, identificarlas con IA a través de la cámara, y sincronizar los datos con Firebase incluso sin conexión.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-# 📱 Mi Proyecto Expo con Docker
-
-Este proyecto utiliza **Docker** para mantener el sistema anfitrión limpio y asegurar que todos los desarrolladores usen la misma versión de Node.js y dependencias. 
-**Nota:** Al usar Docker, todos los comandos de desarrollo y paquetes deben ejecutarse *dentro* del contenedor para evitar problemas de permisos (`EACCES`).
+**Estudiante:** Angel Segura Ward
+**Curso:** EIF411 — Desarrollo y diseño de plataformas móviles
+**Universidad Nacional, Sede Regional Brunca**
 
 ---
 
-## 🚀 Guía de Uso Rápido
+## Stack tecnológico
 
-### 1. Iniciar la Aplicación
-
-Para levantar el entorno y el servidor de desarrollo (Metro bundler):
-
-```bash
-# Paso 1: Levanta el contenedor en segundo plano (si no está corriendo)
-docker compose up -d
-
-# Paso 2: Inicia Expo (Genera el código QR)
-docker compose exec app npx expo start
-```
-
-**Opciones de ejecución importantes:**
-* **Conexión local fallida (Expo Go):** Si el código QR se queda cargando y no conecta en tu celular por restricciones de la red Docker, utiliza el modo túnel:
-  ```bash
-  docker compose exec app npx expo start --tunnel
-  ```
-* **Probar en la Web:** Para abrir directamente la visualización web en tu navegador:
-  ```bash
-  docker compose exec app npx expo start -w
-  ```
-
-### 2. Instalar y Actualizar Paquetes
-
-No uses `npm install` localmente desde tu terminal raíz. **Siempre hazlo dentro del contenedor** para mantener sincronizadas las dependencias del `package.json` y el `node_modules` del contenedor.
-
-```bash
-# Instalar un nuevo paquete (Ejemplo: axios)
-docker compose exec app npm install axios
-
-# Actualizar todas las dependencias
-docker compose exec app npm install
-
-# Agregar un paquete nativo que requiere configuración de Expo (Ejemplo: expo-font)
-docker compose exec app npx expo install expo-font
-```
-
-### 3. Solución de Problemas de Permisos (EACCES)
-
-Si experimentas errores como `EACCES: permission denied` al intentar guardar archivos como `expo-env.d.ts`, significa que esos archivos se crearon con permisos del contenedor (root). 
-Para solucionarlo, nunca inicies `npx expo start` fuera del contenedor, asegúrate siempre de usar el prefijo `docker compose exec app` como se indicó arriba.
+| Capa | Tecnología |
+|------|-----------|
+| Framework | Expo SDK 54 + React Native 0.81.5 |
+| Lenguaje | TypeScript 5.9 |
+| Navegación | Expo Router 6 (file-based, Stack + Tabs) |
+| Base de datos | Firebase Firestore |
+| Almacenamiento de archivos | Firebase Storage |
+| Auth | Firebase Authentication (Google OAuth) |
+| Almacenamiento local | expo-sqlite (sync queue offline) |
+| Cámara | expo-camera |
+| Identificación IA | Plant.id v3 (vía backend en Render) |
+| Backend | Node.js + Express + TypeScript |
+| Animaciones | react-native-reanimated v4 |
+| UI | Design system propio con `useAppTheme()` |
 
 ---
 
-## Migracion a Firebase (Marketplace de Plantas)
+## Instalación y ejecución
 
-Se agrego una propuesta completa para migrar datos y logica a Firebase antes de construir mas pantallas.
+```bash
+# 1. Clonar el repositorio
+git clone <url-del-repo>
+cd mi-proyecto-expo
 
-### Documentacion del modelo de base de datos
+# 2. Instalar dependencias
+npm install
 
-- `docs/FIREBASE_DATABASE_MARKETPLACE.md`
+# 3. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con las credenciales de Firebase y la URL del API
 
-Incluye:
+# 4. Iniciar la app
+npx expo start
+```
 
-- colecciones principales de Firestore
-- campos recomendados para comprador y empresa
-- ficha botanica de plantas con campos de cuidado
-- feed social tipo Instagram
-- relacion social con nombre tematico `companerosDeHuerto`
-- indices y reglas de negocio
+Luego escanear el QR con **Expo Go** en Android o iOS.
 
-### Datos semilla JSON
+Si hay problemas de red, usar modo túnel:
+```bash
+npx expo start --tunnel --clear
+```
 
-- `backend/data/firebase_seed_data.json`
+---
 
-### Backend Python para subir datos a Firestore
+## Variables de entorno
 
-- `backend/firebase_seed/README.md`
-- `backend/firebase_seed/seed_firestore.py`
+Copiar `.env.example` a `.env` y completar:
 
-Resumen rapido:
+```env
+EXPO_PUBLIC_FIREBASE_API_KEY=
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+EXPO_PUBLIC_FIREBASE_APP_ID=
+
+EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=
+
+# URL del backend de identificacion (Render)
+EXPO_PUBLIC_PLANT_API_URL=https://<tu-servicio>.onrender.com
+```
+
+---
+
+## Backend — API de identificación de plantas
+
+El backend está en `backend/api/`. Es un servidor Express que hace de proxy entre la app y Plant.id, para que la API key nunca quede expuesta en el bundle móvil.
+
+```bash
+cd backend/api
+npm install
+cp .env.example .env   # agregar PLANT_ID_API_KEY
+npm run dev            # desarrollo local (puerto 3000)
+```
+
+Instrucciones de deploy en Render: [backend/api/README.md](backend/api/README.md).
+
+**URL del API en Render:** _(pendiente — actualizar aquí tras el deploy)_
+
+---
+
+## Funcionalidades principales
+
+### Inventario de plantas (GardenHome)
+- Grid 2 columnas con foto, nombre y nombre científico
+- Estadísticas de jardín: total, plantas que necesitan agua, racha máxima
+- Pull-to-refresh desde Firestore
+
+### Identificación con IA (Plant.id)
+1. Botón "IDENTIFICAR CON IA" en el formulario "Nueva Planta"
+2. Cámara con flip frontal/trasera y control de flash
+3. Preview de la foto antes de enviar
+4. Resultado con nombre común, científico, familia, **barra de confianza %**, toxicidad y cuidados
+5. "Usar estos datos" pre-llena el formulario y muestra badge con porcentaje de confianza
+
+### Funcionamiento offline
+- Plantas creadas sin conexión se guardan en SQLite (`sync_queue`)
+- Aparecen en el inventario con badge **"PENDIENTE"** hasta sincronizarse
+- Banner animado indica estado: offline (rojo) / sincronizando (ámbar)
+- Al recuperar la red la cola se drena automáticamente en segundo plano
+
+### Gestión de permisos de cámara
+- Permisos denegados → pantalla informativa con "Solicitar permisos" y "Ir a Configuración"
+- La app sigue operativa sin cámara en todo momento
+
+---
+
+## Estructura del proyecto
+
+```
+app/                         # Rutas Expo Router
+├── (auth)/                  # Login / registro
+└── (app)/
+    ├── (tabs)/              # Tabs: GardenHome, Explore, Perfil
+    └── plant/               # Detalle, nueva planta, editar, cámara IA
+
+src/
+├── components/ui/           # Design system: PlantCard, AIResultCard, OfflineBanner...
+├── context/                 # ThemeContext, AuthContext, ToastContext
+├── hooks/                   # useCamera, usePlantIdentification, useNetworkStatus,
+│                            # useSyncQueue, usePendingPlants...
+├── screens/                 # GardenHome, PlantCamera, UserProfile...
+├── services/                # firestore, cameraService, permissionService,
+│                            # plantIdentificationService, localDb, syncService
+├── stores/                  # identificationStore
+└── types-dtos/              # PlantDocument, UserDocument, identification.types...
+
+backend/
+├── api/                     # Servidor Express (deploy en Render)
+└── firebase_seed/           # Seed de Firestore (Python)
+
+docs/
+├── ACTIVIDAD3_ANALISIS.md   # Análisis offline + almacenamiento (Actividad 3)
+├── ACTIVIDAD3_PLAN.md       # Plan de implementación
+└── GAMIFICATION_SPEC.md     # Spec RPG: XP, logros, rareza
+```
+
+---
+
+## Firebase Seed
+
+Para poblar Firestore con datos iniciales:
 
 ```bash
 cd backend/firebase_seed
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 python seed_firestore.py --credentials ./serviceAccountKey.json
 ```
 
-## Salvatantas tresmil
-npx expo start --tunnel --clear
+---
+
+## Entrega Actividad 3
+
+| Recurso | Enlace |
+|---------|--------|
+| Documento de análisis | [docs/ACTIVIDAD3_ANALISIS.md](docs/ACTIVIDAD3_ANALISIS.md) |
+| API en Render | _(pendiente)_ |
+| Video de demostración | _(pendiente)_ |
+| Repositorio | _(URL del repo)_ |

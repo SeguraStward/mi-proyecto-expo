@@ -1,6 +1,8 @@
+import OfflineBanner from '@/src/components/ui/OfflineBanner';
 import { useAuth } from '@/src/context/AuthContext';
 import { useAppTheme } from '@/src/theme/designSystem';
 import { Redirect, Stack } from 'expo-router';
+import { View } from 'react-native';
 
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -15,7 +17,8 @@ export default function AppLayout() {
   }
 
   return (
-    <Stack
+    <View style={{ flex: 1 }}>
+      <Stack
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: theme.colors.background },
@@ -50,6 +53,16 @@ export default function AppLayout() {
           animation: 'slide_from_right',
         }}
       />
-    </Stack>
+      <Stack.Screen
+        name="plant/identify"
+        options={{
+          headerShown: false,
+          animation: 'slide_from_bottom',
+          presentation: 'modal',
+        }}
+      />
+      </Stack>
+      <OfflineBanner />
+    </View>
   );
 }

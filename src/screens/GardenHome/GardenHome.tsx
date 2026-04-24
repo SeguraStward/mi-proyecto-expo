@@ -10,6 +10,7 @@
 
 import { PlantCard, RetroButton } from '@/src/components/ui';
 import { useGardenPlants } from '@/src/hooks/useGardenPlants';
+import { usePendingPlants, type PendingPlant } from '@/src/hooks/usePendingPlants';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
 import type { PlantDocument } from '@/src/types-dtos/plant.types';
@@ -25,6 +26,10 @@ import {
   View,
 } from 'react-native';
 
+type GardenItem =
+  | { kind: 'plant'; plant: PlantDocument }
+  | { kind: 'pending'; plant: PendingPlant };
+
 // ── Componente ────────────────────────────────────────────────────────────────
 
 export default function GardenHome() {
@@ -32,6 +37,12 @@ export default function GardenHome() {
   const s = getStyles(theme);
   const router = useRouter();
   const { plants, isLoading, error, refetch } = useGardenPlants();
+  const pendingPlants = usePendingPlants();
+
+  const items: GardenItem[] = [
+    ...pendingPlants.map((p): GardenItem => ({ kind: 'pending', plant: p })),
+    ...plants.map((p): GardenItem => ({ kind: 'plant', plant: p })),
+  ];
 
   const handlePlantPress = (plant: PlantDocument) => {
     router.push({
@@ -114,19 +125,35 @@ export default function GardenHome() {
   return (
     <View style={s.container}>
       <FlatList
-        data={plants}
+        data={items}
         numColumns={2}
-        keyExtractor={(item) => item.id}
-        columnWrapperStyle={plants.length > 0 ? s.gridRow : undefined}
-        renderItem={({ item }) => (
-          <PlantCard
-            name={item.nickname ?? item.botanicalInfo?.commonName ?? 'Planta'}
-            iconName="leaf"
-            scientificName={item.botanicalInfo?.scientificName ?? item.botanicalInfo?.commonName ?? ''}
-            imageUri={item.photos?.[0]?.url}
-            onPress={() => handlePlantPress(item)}
-          />
-        )}
+        keyExtractor={(item) =>
+          item.kind === 'plant' ? item.plant.id : item.plant.tempId
+        }
+        columnWrapperStyle={items.length > 0 ? s.gridRow : undefined}
+        renderItem={({ item }) => {
+          if (item.kind === 'pending') {
+            return (
+              <PlantCard
+                name={item.plant.nickname || item.plant.commonName || 'Planta'}
+                scientificName={item.plant.scientificName}
+                imageUri={item.plant.photoUri ?? undefined}
+                iconName="leaf"
+                pending
+              />
+            );
+          }
+          const p = item.plant;
+          return (
+            <PlantCard
+              name={p.nickname ?? p.botanicalInfo?.commonName ?? 'Planta'}
+              iconName="leaf"
+              scientificName={p.botanicalInfo?.scientificName ?? p.botanicalInfo?.commonName ?? ''}
+              imageUri={p.photos?.[0]?.url}
+              onPress={() => handlePlantPress(p)}
+            />
+          );
+        }}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={s.listContent}

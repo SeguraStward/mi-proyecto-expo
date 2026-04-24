@@ -46,6 +46,8 @@ export interface PlantCardProps {
   iconName?: string;
   /** Color del icono (por defecto: primary del tema) */
   iconColor?: string;
+  /** Indica que la planta esta pendiente de sincronizar (creada offline) */
+  pending?: boolean;
   /** Callback al presionar la tarjeta */
   onPress?: () => void;
   /** Estilos adicionales */
@@ -62,6 +64,7 @@ export function PlantCard({
   imageUri,
   iconName = 'leaf',
   iconColor,
+  pending = false,
   onPress,
   style,
   accessibilityLabel,
@@ -90,6 +93,16 @@ export function PlantCard({
             />
           </View>
         )}
+        {pending ? (
+          <View style={s.pendingBadge}>
+            <MaterialCommunityIcons
+              name="cloud-upload-outline"
+              size={12}
+              color={theme.colors.textOnPrimary}
+            />
+            <Text style={s.pendingText}>PENDIENTE</Text>
+          </View>
+        ) : null}
       </View>
 
       {/* Bloque de texto — fondo solido, nunca sobre la imagen */}
@@ -177,6 +190,26 @@ function getStyles(t: AppTheme) {
       color: t.colors.textSecondary,
       fontStyle: 'italic',
       marginTop: 2,
+    },
+    pendingBadge: {
+      position: 'absolute',
+      top: t.spacing.xs,
+      right: t.spacing.xs,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: t.colors.warning,
+      borderWidth: t.borderWidths.thin,
+      borderColor: t.colors.border,
+      borderRadius: t.radius.sm,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+    },
+    pendingText: {
+      fontFamily: t.typography.fontFamily,
+      fontSize: 8,
+      color: t.colors.textOnPrimary,
+      letterSpacing: 1,
     },
   });
 }

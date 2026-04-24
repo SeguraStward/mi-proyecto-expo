@@ -5,15 +5,18 @@
 import { FormInput } from '@/src/components/ui';
 import { useAuth } from '@/src/context/AuthContext';
 import { useToast } from '@/src/context/ToastContext';
+import { useNetworkStatus } from '@/src/hooks/useNetworkStatus';
 import { plantCreateSchema, type PlantCreateFormInput } from '@/src/schemas/plant.schema';
 import { createPlant, uploadPlantPhoto, upsertPlant } from '@/src/services/firestore';
+import syncService from '@/src/services/syncService';
+import { identificationStore, useIdentificationResult } from '@/src/stores/identificationStore';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
 import { pickImage } from '@/src/utils/pickImage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   ActivityIndicator,
@@ -35,13 +38,21 @@ export default function CreatePlantForm() {
   const { showToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [aiConfidence, setAiConfidence] = useState<number | null>(null);
+  const identificationResult = useIdentificationResult();
+  const { isConnected, isInternetReachable } = useNetworkStatus();
+  const isOnline = isConnected && isInternetReachable;
 
   const handlePickImage = async () => {
     const uri = await pickImage();
     if (uri) setPhotoUri(uri);
   };
 
-  const { control, handleSubmit, formState: { errors } } = useForm<PlantCreateFormInput>({
+  const handleOpenCamera = () => {
+    router.push('/(app)/plant/identify');
+  };
+
+  const { control, handleSubmit, setValue, formState: { errors } } = useForm<PlantCreateFormInput>({
     resolver: zodResolver(plantCreateSchema) as any,
     mode: 'onSubmit',
     defaultValues: {
@@ -55,6 +66,25 @@ export default function CreatePlantForm() {
     },
   });
 
+  useEffect(() => {
+    if (!identificationResult) return;
+    setPhotoUri(identificationResult.photoUri);
+    setAiConfidence(identificationResult.confidence);
+    if (identificationResult.commonName) {
+      setValue('commonName', identificationResult.commonName);
+    }
+    if (identificationResult.scientificName) {
+      setValue('scientificName', identificationResult.scientificName);
+    }
+    if (identificationResult.care?.light) {
+      setValue('sunlight', identificationResult.care.light);
+    }
+    if (identificationResult.care?.soil) {
+      setValue('soilType', identificationResult.care.soil);
+    }
+    identificationStore.clear();
+  }, [identificationResult, setValue]);
+
   const onSubmit = async (data: PlantCreateFormInput) => {
     if (!user?.uid) {
       showToast({ type: 'error', message: 'Debes iniciar sesion' });
@@ -63,46 +93,56 @@ export default function CreatePlantForm() {
     // zodResolver ya transformo los strings a numeros — usamos data directamente
     const parsed = data as unknown as import('@/src/schemas/plant.schema').PlantCreateFormData;
     setIsSaving(true);
+    const now = new Date().toISOString();
+    const plantData = {
+      userId: user.uid,
+      nickname: parsed.nickname,
+      photos: [],
+      botanicalInfo: {
+        commonName: parsed.commonName,
+        scientificName: parsed.scientificName ?? '',
+        family: '',
+        origin: '',
+        climate: '',
+        toxicity: 'No toxica',
+        maxHeight: '',
+        growthRate: '',
+      },
+      careRules: {
+        wateringFrequencyDays: parsed.wateringFrequencyDays,
+        sunlight: parsed.sunlight,
+        humidity: parsed.humidity ?? '',
+        fertilizerFrequencyDays: 30,
+        soilType: parsed.soilType ?? '',
+        pruningSeason: '',
+        rotationFrequencyDays: 15,
+      },
+      status: {
+        ageInMonths: 0,
+        currentHeightCm: 0,
+        potSizeCm: 0,
+        health: 'buena',
+        careStreak: 0,
+        waterLevel: 50,
+        lastWateredAt: now,
+        nextWateringDue: now,
+      },
+      createdAt: now,
+      updatedAt: now,
+    };
+
     try {
-      const now = new Date().toISOString();
-      // Crear planta primero (sin foto) para obtener el ID
-      const plantId = await createPlant({
-        userId: user.uid,
-        nickname: parsed.nickname,
-        photos: [],
-        botanicalInfo: {
-          commonName: parsed.commonName,
-          scientificName: parsed.scientificName ?? '',
-          family: '',
-          origin: '',
-          climate: '',
-          toxicity: 'No toxica',
-          maxHeight: '',
-          growthRate: '',
-        },
-        careRules: {
-          wateringFrequencyDays: parsed.wateringFrequencyDays,
-          sunlight: parsed.sunlight,
-          humidity: parsed.humidity ?? '',
-          fertilizerFrequencyDays: 30,
-          soilType: parsed.soilType ?? '',
-          pruningSeason: '',
-          rotationFrequencyDays: 15,
-        },
-        status: {
-          ageInMonths: 0,
-          currentHeightCm: 0,
-          potSizeCm: 0,
-          health: 'buena',
-          careStreak: 0,
-          waterLevel: 50,
-          lastWateredAt: now,
-          nextWateringDue: now,
-        },
-        createdAt: now,
-        updatedAt: now,
-      });
-      // Si hay foto, subirla a Storage y actualizar la planta con la URL permanente
+      if (!isOnline && Platform.OS !== 'web') {
+        await syncService.queueCreatePlant({ plantData, photoUri });
+        showToast({
+          type: 'info',
+          message: 'Sin conexion — se sincronizara al volver la red',
+        });
+        setTimeout(() => router.back(), 800);
+        return;
+      }
+
+      const plantId = await createPlant(plantData);
       if (photoUri) {
         const photoUrl = await uploadPlantPhoto(plantId, photoUri);
         await upsertPlant(plantId, {
@@ -113,7 +153,18 @@ export default function CreatePlantForm() {
       setTimeout(() => router.back(), 600);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al crear planta';
-      showToast({ type: 'error', message: msg });
+      if (Platform.OS !== 'web') {
+        await syncService
+          .queueCreatePlant({ plantData, photoUri })
+          .catch(() => {});
+        showToast({
+          type: 'info',
+          message: 'Fallo al guardar — se reintentara automaticamente',
+        });
+        setTimeout(() => router.back(), 800);
+      } else {
+        showToast({ type: 'error', message: msg });
+      }
     } finally {
       setIsSaving(false);
     }
@@ -158,6 +209,30 @@ export default function CreatePlantForm() {
             </View>
           )}
         </Pressable>
+
+        {/* Boton IDENTIFICAR CON IA */}
+        <Pressable
+          onPress={handleOpenCamera}
+          style={s.aiButton}
+          accessibilityRole="button"
+          accessibilityLabel="Identificar planta con IA"
+        >
+          <MaterialCommunityIcons name="leaf" size={18} color={theme.colors.textOnPrimary} />
+          <Text style={s.aiButtonText}>IDENTIFICAR CON IA</Text>
+        </Pressable>
+
+        {aiConfidence !== null ? (
+          <View style={s.aiBadge}>
+            <MaterialCommunityIcons
+              name="check-circle-outline"
+              size={14}
+              color={theme.colors.primary}
+            />
+            <Text style={s.aiBadgeText}>
+              DATOS SUGERIDOS POR IA · CONFIANZA {Math.round(aiConfidence * 100)}%
+            </Text>
+          </View>
+        ) : null}
 
         <View style={s.section}>
           <Text style={s.sectionTitle}>IDENTIDAD</Text>
@@ -276,6 +351,45 @@ function getStyles(t: AppTheme) {
       fontFamily: t.typography.fontFamily,
       fontSize: t.typography.sizes.overline,
       color: t.colors.textMuted,
+      letterSpacing: 1,
+    },
+    aiButton: {
+      alignSelf: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.sm,
+      backgroundColor: t.colors.primary,
+      borderWidth: t.borderWidths.thick,
+      borderColor: t.colors.border,
+      borderRadius: t.radius.md,
+      paddingHorizontal: t.spacing.lg,
+      paddingVertical: t.spacing.sm,
+      marginBottom: t.spacing.md,
+      ...t.elevation.sm,
+    },
+    aiButtonText: {
+      fontFamily: t.typography.fontFamily,
+      fontSize: t.typography.sizes.overline,
+      color: t.colors.textOnPrimary,
+      letterSpacing: 1,
+    },
+    aiBadge: {
+      alignSelf: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: t.colors.surfaceVariant,
+      borderWidth: t.borderWidths.thin,
+      borderColor: t.colors.primary,
+      borderRadius: t.radius.sm,
+      paddingHorizontal: t.spacing.sm,
+      paddingVertical: 4,
+      marginBottom: t.spacing.md,
+    },
+    aiBadgeText: {
+      fontFamily: t.typography.fontFamily,
+      fontSize: 9,
+      color: t.colors.primary,
       letterSpacing: 1,
     },
     section: {
