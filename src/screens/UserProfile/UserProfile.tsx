@@ -12,8 +12,11 @@
  * ============================================================================
  */
 
+import { useAuth } from '@/src/context/AuthContext';
 import { useThemeToggle } from '@/src/context/ThemeContext';
+import { useToast } from '@/src/context/ToastContext';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
+import { updateUser, uploadUserAvatar } from '@/src/services/firestore';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -21,16 +24,16 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Image,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 // ── Constantes ───────────────────────────────────────────────
@@ -41,6 +44,8 @@ type ProfileTab = 'info' | 'settings';
 
 export default function UserProfile() {
   const { userDoc, isLoading, error } = useUserProfile();
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const theme = useAppTheme();
   const { mode, toggleTheme } = useThemeToggle();
   const router = useRouter();
@@ -61,7 +66,27 @@ export default function UserProfile() {
       quality: 0.8,
     });
     if (!result.canceled && result.assets[0]) {
-      setAvatarUri(result.assets[0].uri);
+      const uri = result.assets[0].uri;
+      setAvatarUri(uri);
+
+      if (!user?.uid) {
+        showToast({ type: 'error', message: 'Sesion no valida para subir avatar' });
+        return;
+      }
+
+      try {
+        const avatarUrl = await uploadUserAvatar(user.uid, uri);
+        await updateUser(user.uid, {
+          profile: {
+            bio: userDoc?.profile?.bio ?? '',
+            avatarUrl,
+          },
+        });
+        showToast({ type: 'success', message: 'Foto de perfil actualizada' });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'No se pudo subir la foto de perfil';
+        showToast({ type: 'error', message: msg });
+      }
     }
   };
 
