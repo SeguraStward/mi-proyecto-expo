@@ -74,6 +74,13 @@ export const AIResultCard: React.FC<AIResultCardProps> = ({
         <Text style={[s.value, s.italic]}>{result.scientificName || '—'}</Text>
       </View>
 
+      {result.description ? (
+        <View style={s.section}>
+          <Text style={s.label}>DESCRIPCION BREVE</Text>
+          <Text style={s.value}>{result.description}</Text>
+        </View>
+      ) : null}
+
       {result.family ? (
         <View style={s.section}>
           <Text style={s.label}>FAMILIA</Text>

@@ -67,6 +67,22 @@ function buildCare(details?: PlantIdSuggestionDetails) {
   return { water, light, soil };
 }
 
+function buildDescription(commonName: string, family?: string): string | undefined {
+  const shortName = commonName.trim();
+  const shortFamily = family?.trim();
+  if (!shortName) return undefined;
+
+  const parts = [
+    `${shortName} es una planta ornamental de cuidado moderado.`,
+  ];
+
+  if (shortFamily) {
+    parts.push(`Pertenece a la familia ${shortFamily}.`);
+  }
+
+  return parts.join(' ').slice(0, 160);
+}
+
 function buildImageCandidates(parsed: ParsedBase64Image): string[] {
   const mimeType = parsed.mimeType ?? inferMimeTypeFromBase64(parsed.payload) ?? 'image/jpeg';
   const dataUri = `data:${mimeType};base64,${parsed.payload}`;
@@ -155,6 +171,7 @@ export async function identifyPlantWithPlantId(
     commonName,
     scientificName: top.name,
     confidence: top.probability,
+    description: buildDescription(commonName, top.details?.taxonomy?.family),
     family: top.details?.taxonomy?.family,
     toxicity: readString(top.details?.toxicity),
     care: buildCare(top.details),

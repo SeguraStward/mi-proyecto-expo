@@ -30,8 +30,29 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '@/src/theme';
+
+function withAlpha(hexColor: string, alpha: number): string {
+  const safeAlpha = Math.max(0, Math.min(1, alpha));
+  if (!hexColor.startsWith('#')) return hexColor;
+
+  const hex = hexColor.slice(1);
+  const normalized =
+    hex.length === 3
+      ? hex.split('').map((c) => c + c).join('')
+      : hex.length === 6
+        ? hex
+        : null;
+
+  if (!normalized) return hexColor;
+
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
+}
 
 export function BottomNavBar({
   state,
@@ -39,25 +60,35 @@ export function BottomNavBar({
   navigation,
 }: BottomTabBarProps) {
   const theme = useAppTheme();
+  const insets = useSafeAreaInsets();
+  const bottomOffset = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 8);
 
   return (
     <View
       style={[
+        styles.wrapper,
+        {
+          bottom: bottomOffset,
+        },
+      ]}
+    >
+      <View
+        style={[
         styles.container,
         {
-          backgroundColor: theme.colors.surface,
-          borderTopWidth: theme.borderWidths.thick,
-          borderTopColor: theme.colors.border,
+          backgroundColor: withAlpha(theme.colors.surface, 0.86),
+          borderWidth: theme.borderWidths.thick,
+          borderColor: withAlpha(theme.colors.border, 0.9),
           // Sombra solida pixel art (solo hacia arriba)
           ...Platform.select({
             ios: {
               shadowColor: theme.colors.shadow,
-              shadowOffset: { width: 0, height: -2 },
+              shadowOffset: { width: 0, height: 10 },
               shadowOpacity: 0.8,
-              shadowRadius: 0,
+              shadowRadius: 12,
             },
             android: {
-              elevation: 8,
+              elevation: 14,
             },
           }),
         },
@@ -145,23 +176,33 @@ export function BottomNavBar({
           </TouchableOpacity>
         );
       })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    zIndex: 50,
+  },
   container: {
     flexDirection: 'row',
-    height: 80,
+    height: 74,
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingBottom: Platform.OS === 'ios' ? 8 : 4,
+    borderRadius: 24,
+    overflow: 'hidden',
+    paddingBottom: 6,
+    paddingTop: 2,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 12,
+    paddingTop: 8,
     minHeight: 48,
   },
   indicator: {

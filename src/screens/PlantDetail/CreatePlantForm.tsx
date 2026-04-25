@@ -81,6 +81,9 @@ export default function CreatePlantForm() {
     if (identificationResult.scientificName) {
       setValue('scientificName', normalizeAiText(identificationResult.scientificName, 80));
     }
+    if (identificationResult.description) {
+      setValue('description', normalizeAiText(identificationResult.description, 160));
+    }
     if (identificationResult.care?.light) {
       setValue('sunlight', normalizeAiText(identificationResult.care.light, 120));
     }

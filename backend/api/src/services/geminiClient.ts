@@ -18,6 +18,7 @@ interface GeminiPlantResult {
   commonName?: string;
   scientificName?: string;
   confidence?: number;
+  description?: string;
   family?: string;
   toxicity?: string;
   care?: {
@@ -59,6 +60,7 @@ function normalizeGeminiResult(data: GeminiPlantResult): PlantIdentificationResp
   const isPlant = Boolean(data.isPlant);
   const commonName = cleanString(data.commonName);
   const scientificName = cleanString(data.scientificName);
+  const description = cleanString(data.description);
   const family = cleanString(data.family) || undefined;
   const toxicity = cleanString(data.toxicity) || undefined;
   const confidence = clampConfidence(data.confidence);
@@ -87,6 +89,7 @@ function normalizeGeminiResult(data: GeminiPlantResult): PlantIdentificationResp
     commonName: commonName || scientificName || 'Planta',
     scientificName: scientificName || commonName || 'Planta desconocida',
     confidence,
+    description: description || undefined,
     family,
     toxicity,
     care: hasCare ? care : undefined,
@@ -108,12 +111,14 @@ export async function identifyPlantWithGemini(
     '  "commonName": string,',
     '  "scientificName": string,',
     '  "confidence": number,',
+    '  "description": string,',
     '  "family": string,',
     '  "toxicity": string,',
     '  "care": { "water": string, "light": string, "soil": string }',
     '}',
     'Reglas:',
     '- confidence entre 0 y 1.',
+    '- description debe ser breve, maximo 160 caracteres, en espanol.',
     '- Si no es una planta: isPlant=false y deja strings vacios.',
     '- Responde en espanol para commonName/toxicity/care.',
   ].join('\n');

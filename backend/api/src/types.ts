@@ -9,6 +9,7 @@ export interface PlantIdentificationResponse {
   commonName: string;
   scientificName: string;
   confidence: number; // 0 a 1
+  description?: string;
   family?: string;
   toxicity?: string;
   care?: AICareInfo;
