@@ -3,5 +3,17 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
+  },
+  "typescript.tsserver.maxTsServerMemory": 2048,
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.expo": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.expo/**": true,
+    "**/dist/**": true
   }
 }

@@ -109,7 +109,7 @@ El backend se desplegó en **Render** como un servicio web Node.js + Express + T
 
 La API key vive **solo en el backend** como variable de entorno (`PLANT_ID_API_KEY`). La app móvil nunca tiene acceso a ella, evitando filtraciones por reverse engineering del bundle.
 
-**URL del API desplegado:** _[pendiente de deploy — actualizar tras subir a Render]_
+**URL del API desplegado:** https://mi-proyecto-expo.onrender.com
 
 ### 2.2 Identificación de plantas con IA — flujo implementado
 
@@ -158,7 +158,7 @@ En ningún caso la app se bloquea o crashea. Si no se otorgan permisos, las func
 ## Parte 3: Repositorio y recursos
 
 - **Repositorio:** [github.com/angelsgalaxy/retro-garden](https://github.com/angelsgalaxy/retro-garden) _(actualizar con URL real)_
-- **API en Render:** _(URL pendiente de deploy)_
+- **API en Render:** https://mi-proyecto-expo.onrender.com
 - **Video de demostración:** _(URL pendiente de grabación)_
 
 ---

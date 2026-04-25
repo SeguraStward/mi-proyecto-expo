@@ -21,8 +21,7 @@ router.post('/', async (req: Request<unknown, unknown, IdentifyBody>, res: Respo
   }
 
   try {
-    const clean = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
-    const result = await identifyPlantWithPlantId(clean, apiKey);
+    const result = await identifyPlantWithPlantId(imageBase64, apiKey);
     return res.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error desconocido';

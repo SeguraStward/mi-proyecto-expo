@@ -74,6 +74,12 @@ export async function identifyPlantWithPlantId(
     DETAIL_FIELDS
   )}&language=es`;
 
+  // Plant.id v3 requiere el prefijo data URI y sin saltos de linea
+  const clean = imageBase64.replace(/\s/g, '');
+  const image = clean.startsWith('data:')
+    ? clean
+    : `data:image/jpeg;base64,${clean}`;
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -81,7 +87,7 @@ export async function identifyPlantWithPlantId(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      images: [imageBase64],
+      images: [image],
       similar_images: false,
     }),
   });
