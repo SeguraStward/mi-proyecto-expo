@@ -62,13 +62,33 @@ function buildCare(details?: PlantIdSuggestionDetails) {
   return { water, light, soil };
 }
 
-function extractAndValidateBase64(imageBase64: string): string {
+interface ParsedBase64Image {
+  payload: string;
+  mimeType?: string;
+}
+
+function inferMimeTypeFromBase64(payload: string): string | undefined {
+  if (payload.startsWith('/9j/')) return 'image/jpeg';
+  if (payload.startsWith('iVBORw0KGgo')) return 'image/png';
+  if (payload.startsWith('UklGR')) return 'image/webp';
+  if (payload.startsWith('R0lGOD')) return 'image/gif';
+  return undefined;
+}
+
+function extractAndValidateBase64(imageBase64: string): ParsedBase64Image {
   const clean = imageBase64.replace(/\s/g, '').trim();
 
-  const commaIndex = clean.indexOf(',');
-  const payload = clean.startsWith('data:') && commaIndex >= 0
-    ? clean.slice(commaIndex + 1)
-    : clean;
+  let payload = clean;
+  let mimeType: string | undefined;
+
+  if (clean.startsWith('data:')) {
+    const match = clean.match(/^data:([^;,]+);base64,(.+)$/i);
+    if (!match) {
+      throw new Error('Imagen invalida: data URI mal formado');
+    }
+    mimeType = match[1];
+    payload = match[2];
+  }
 
   if (!payload || payload.length < 128) {
     throw new Error('Imagen invalida: base64 vacio o incompleto');
@@ -78,20 +98,23 @@ function extractAndValidateBase64(imageBase64: string): string {
     throw new Error('Imagen invalida: base64 con caracteres no permitidos');
   }
 
-  return payload;
+  return { payload, mimeType };
 }
 
-export async function identifyPlantWithPlantId(
-  imageBase64: string,
-  apiKey: string
-): Promise<PlantIdentificationResponse> {
-  const url = `${PLANT_ID_BASE_URL}/identification?details=${encodeURIComponent(
-    DETAIL_FIELDS
-  )}&language=es`;
+function buildImageCandidates(parsed: ParsedBase64Image): string[] {
+  const mimeType = parsed.mimeType ?? inferMimeTypeFromBase64(parsed.payload) ?? 'image/jpeg';
+  const dataUri = `data:${mimeType};base64,${parsed.payload}`;
 
-  const image = extractAndValidateBase64(imageBase64);
+  // Probamos ambos formatos por compatibilidad entre variantes de captura.
+  return Array.from(new Set([dataUri, parsed.payload]));
+}
 
-  const response = await fetch(url, {
+async function requestPlantId(
+  url: string,
+  apiKey: string,
+  image: string
+): Promise<Response> {
+  return fetch(url, {
     method: 'POST',
     headers: {
       'Api-Key': apiKey,
@@ -101,10 +124,49 @@ export async function identifyPlantWithPlantId(
       images: [image],
     }),
   });
+}
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => '');
-    throw new Error(`Plant.id error ${response.status}: ${text}`);
+export async function identifyPlantWithPlantId(
+  imageBase64: string,
+  apiKey: string
+): Promise<PlantIdentificationResponse> {
+  const richUrl = `${PLANT_ID_BASE_URL}/identification?details=${encodeURIComponent(
+    DETAIL_FIELDS
+  )}&language=es`;
+  const basicUrl = `${PLANT_ID_BASE_URL}/identification?language=es`;
+
+  const parsedImage = extractAndValidateBase64(imageBase64);
+  const imageCandidates = buildImageCandidates(parsedImage);
+
+  let response: Response | null = null;
+  let lastError = 'Error desconocido';
+
+  for (const url of [richUrl, basicUrl]) {
+    for (const image of imageCandidates) {
+      response = await requestPlantId(url, apiKey, image);
+      if (response.ok) {
+        break;
+      }
+
+      const text = await response.text().catch(() => '');
+      lastError = `Plant.id error ${response.status}: ${text}`;
+
+      const looksLikeInvalidImage =
+        response.status === 400 &&
+        /invalid image data|invalid base64 image data/i.test(text);
+
+      if (!looksLikeInvalidImage) {
+        throw new Error(lastError);
+      }
+    }
+
+    if (response?.ok) {
+      break;
+    }
+  }
+
+  if (!response || !response.ok) {
+    throw new Error(lastError);
   }
 
   const data = (await response.json()) as PlantIdRawResponse;
