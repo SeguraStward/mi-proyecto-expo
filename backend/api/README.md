@@ -1,6 +1,6 @@
 # Retro Garden — Plant Identification API
 
-API proxy para identificación de plantas. La app móvil envía una imagen en base64 y este servicio la reenvía a [Plant.id](https://plant.id) v3, devolviendo una respuesta normalizada.
+API proxy para identificación de plantas. La app móvil envía una imagen en base64 y este servicio la procesa con **Gemini** o **Plant.id** (según configuración), devolviendo una respuesta normalizada.
 
 ## Estructura
 
@@ -10,6 +10,7 @@ backend/api/
 │   ├── index.ts                # Servidor Express + CORS
 │   ├── routes/identify.ts      # POST /api/identify
 │   ├── services/plantIdClient.ts  # Integración con Plant.id
+│   ├── services/geminiClient.ts   # Integración con Gemini Vision
 │   └── types.ts                # Tipos compartidos
 ├── package.json
 ├── tsconfig.json
@@ -24,9 +25,14 @@ Copiar `.env.example` a `.env` y completar:
 | Variable | Descripción |
 |----------|-------------|
 | `PORT` | Puerto del servidor (default `3000`) |
-| `PLANT_ID_API_KEY` | API key de [plant.id](https://plant.id) — **obligatoria** |
+| `AI_PROVIDER` | Proveedor preferido: `gemini` o `plantid` (default `plantid`) |
+| `PLANT_ID_API_KEY` | API key de [plant.id](https://plant.id) — opcional si usas Gemini |
 | `PLANT_ID_BASE_URL` | Base URL de Plant.id (default `https://plant.id/api/v3`) |
+| `GEMINI_API_KEY` | API key de Google AI Studio (Gemini) — opcional si usas Plant.id |
+| `GEMINI_MODEL` | Modelo Gemini (default `gemini-1.5-flash`) |
 | `ALLOWED_ORIGINS` | Orígenes CORS permitidos, separados por coma, o `*` |
+
+Si configuras ambos proveedores, el endpoint hace **fallback automático** al otro proveedor cuando el preferido falla.
 
 ## Desarrollo local
 
@@ -34,7 +40,7 @@ Copiar `.env.example` a `.env` y completar:
 cd backend/api
 npm install
 cp .env.example .env
-# editar .env con tu PLANT_ID_API_KEY
+# editar .env con AI_PROVIDER y tu API key correspondiente
 npm run dev
 ```
 
@@ -93,7 +99,9 @@ Identifica una planta a partir de una imagen.
    - **Start Command:** `npm start`
    - **Environment:** Node
 4. En "Environment Variables" agregar:
-   - `PLANT_ID_API_KEY` = tu key de Plant.id
+  - `AI_PROVIDER` = `gemini` (recomendado) o `plantid`
+  - `GEMINI_API_KEY` = tu key de Google AI Studio
+  - (opcional) `PLANT_ID_API_KEY` = tu key de Plant.id para fallback
    - `ALLOWED_ORIGINS` = `*` (o los orígenes específicos de la app)
 5. Deploy
 
@@ -106,5 +114,6 @@ EXPO_PUBLIC_PLANT_API_URL=https://retro-garden-plant-api.onrender.com
 ## Notas
 
 - **Plan gratuito de Plant.id:** 100 identificaciones/mes.
+- **Gemini:** obtén API key en Google AI Studio (https://aistudio.google.com/app/apikey).
 - **Plan gratuito de Render:** el servicio se duerme tras 15 min de inactividad y tarda ~30s en despertar. Aceptable para demo/laboratorio.
 - La API key **nunca** se envía a la app móvil: solo vive en el backend como variable de entorno.

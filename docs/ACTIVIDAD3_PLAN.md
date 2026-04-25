@@ -3,6 +3,8 @@
 
 > Checklist paso a paso para cumplir con todos los criterios de la rúbrica.
 > Marcar cada ítem con ✅ al completarlo.
+>
+> Estado actualizado del proyecto: **24/04/2026**.
 
 ---
 
@@ -19,18 +21,18 @@
 ## Fase 1 — Backend: API de identificación de plantas
 
 ### 1.1 Crear el proyecto backend
-- [ ] Crear carpeta `backend/` en la raíz del monorepo (o repo separado)
-- [ ] Inicializar Node.js + Express + TypeScript:
+- [x] Crear carpeta `backend/` en la raíz del monorepo (estructura real: `backend/api/`)
+- [x] Inicializar Node.js + Express + TypeScript:
   ```bash
   mkdir backend && cd backend
   npm init -y
   npm install express cors dotenv axios
   npm install -D typescript @types/express @types/node ts-node nodemon
   ```
-- [ ] Crear `backend/src/index.ts` con servidor Express básico (puerto 3000)
-- [ ] Crear `backend/src/routes/plantIdentification.ts` con endpoint `POST /api/identify`
-- [ ] El endpoint recibe `{ imageBase64: string }` y llama a Plant.id o Gemini Vision
-- [ ] Retornar respuesta con estructura:
+- [x] Crear `backend/api/src/index.ts` con servidor Express básico (puerto 3000)
+- [x] Crear `backend/api/src/routes/identify.ts` con endpoint `POST /api/identify`
+- [x] El endpoint recibe `{ imageBase64: string }` y llama a Plant.id
+- [x] Retornar respuesta con estructura normalizada:
   ```json
   {
     "commonName": "Monstera",
@@ -40,11 +42,11 @@
     "isPlant": true
   }
   ```
-- [ ] Agregar `backend/.env` con `PLANT_ID_API_KEY` o `GEMINI_API_KEY`
+- [x] Agregar `backend/api/.env` con `PLANT_ID_API_KEY`
 
 ### 1.2 Desplegar en Render
 - [ ] Crear cuenta en render.com si no existe
-- [ ] Crear nuevo **Web Service** apuntando al repo (carpeta `backend/`)
+- [ ] Crear nuevo **Web Service** apuntando al repo (carpeta `backend/api/`)
 - [ ] Configurar variables de entorno en el dashboard de Render
 - [ ] Verificar que el endpoint responda en la URL pública de Render
 - [ ] Compartir acceso con `granadosdaniel566@gmail.com`
@@ -55,30 +57,30 @@
 ## Fase 2 — Integración de IA en la app
 
 ### 2.1 Service de identificación
-- [ ] Crear `src/services/plantIdentificationService.ts`
-  - Función `identifyPlant(imageBase64: string): Promise<PlantIdentificationResult>`
-  - Llama al endpoint del backend desplegado en Render
-  - Maneja errores de red y retorna null si no hay conexión
+- [x] Crear `src/services/plantIdentificationService.ts`
+  - Función de identificación implementada (entrada por `photoUri` y opcional `imageBase64`)
+  - Llama al endpoint del backend (`/api/identify`)
+  - Maneja errores de red/servidor y valida base64
 
 ### 2.2 Hook de identificación
-- [ ] Crear `src/hooks/usePlantIdentification.ts`
+- [x] Crear `src/hooks/usePlantIdentification.ts`
   - Estados: `isLoading`, `result`, `error`
   - Función `identify(uri: string)` que convierte URI → base64 y llama al service
   - Función `reset()` para limpiar el resultado
 
 ### 2.3 Pantalla de cámara
-- [ ] Crear `src/screens/PlantCamera/PlantCamera.tsx`
+- [x] Crear `src/screens/PlantCamera/PlantCamera.tsx`
   - Usa `useCamera()` para gestionar la cámara
   - Botón de captura central
   - Botón de rotar cámara (frontal/trasera)
   - Botón de flash
   - Al tomar foto → muestra preview → botón "Identificar" → muestra resultado con confianza
   - Si no hay permisos → muestra `PermissionDeniedView` con botón para ir a configuración
-- [ ] Crear `app/(app)/plant-camera.tsx` como ruta para esta pantalla
-- [ ] Conectar la ruta desde `CreatePlantForm` (botón de cámara existente)
+- [x] Crear `app/(app)/plant/identify.tsx` como ruta para esta pantalla
+- [x] Conectar la ruta desde `CreatePlantForm` (botón de cámara existente)
 
 ### 2.4 Componente de resultado de IA
-- [ ] Crear `src/components/ui/AIResultCard.tsx`
+- [x] Crear `src/components/ui/AIResultCard.tsx`
   - Muestra nombre común, nombre científico
   - Barra de progreso para el nivel de confianza (porcentaje)
   - Sección de cuidados básicos
@@ -89,7 +91,7 @@
 ## Fase 3 — Gestión de permisos en UI
 
 ### 3.1 Componente de permisos denegados
-- [ ] Crear `src/components/ui/PermissionDeniedView.tsx`
+- [x] Crear `src/components/ui/PermissionDeniedView.tsx`
   - Ilustración/ícono descriptivo
   - Texto explicando por qué se necesita el permiso
   - Botón "Solicitar permisos" → llama a `requestPermissions()`
@@ -97,7 +99,7 @@
   - La app sigue funcionando: el botón de cámara simplemente muestra este componente
 
 ### 3.2 Integrar en el flujo de cámara
-- [ ] En `PlantCamera.tsx` verificar `isPermissionGranted`:
+- [x] En `PlantCamera.tsx` verificar `isPermissionGranted`:
   - `false` + `undetermined` → solicitar automáticamente al montar
   - `false` + `denied` → mostrar `PermissionDeniedView`
   - `true` → mostrar `CameraView` normal
@@ -107,31 +109,32 @@
 ## Fase 4 — Sincronización offline
 
 ### 4.1 Detección de conectividad
-- [ ] Instalar: `npx expo install @react-native-community/netinfo`
-- [ ] Crear `src/hooks/useNetworkStatus.ts`
+- [x] Instalar: `npx expo install @react-native-community/netinfo`
+- [x] Crear `src/hooks/useNetworkStatus.ts`
   - Retorna `{ isConnected: boolean, isInternetReachable: boolean }`
   - Se suscribe a cambios de red en tiempo real
 
 ### 4.2 Banner de estado offline
-- [ ] Crear `src/components/ui/OfflineBanner.tsx`
+- [x] Crear `src/components/ui/OfflineBanner.tsx`
   - Banner amarillo/rojo en la parte superior con texto "Sin conexión"
   - Solo se muestra cuando `!isConnected`
   - Animación de entrada/salida con `react-native-reanimated`
-- [ ] Agregar `<OfflineBanner />` en el layout principal `app/(app)/_layout.tsx`
+- [x] Agregar `<OfflineBanner />` en el layout principal `app/(app)/_layout.tsx`
 
 ### 4.3 Indicador de pendiente de sincronización en plantas
-- [ ] Agregar campo `syncStatus: 'synced' | 'pending' | 'error'` al tipo `Plant`
-- [ ] Modificar `PlantCard.tsx` para mostrar ícono de reloj cuando `syncStatus === 'pending'`
-- [ ] Cuando se crea/edita una planta offline → guardar localmente con `syncStatus: 'pending'`
-- [ ] Cuando vuelve la red → subir automáticamente y cambiar a `syncStatus: 'synced'`
+- [ ] Agregar campo `syncStatus: 'synced' | 'pending' | 'error'` al tipo `Plant` (pendiente; se usa `sync_queue`)
+- [x] Modificar `PlantCard.tsx` para mostrar estado pendiente en UI
+- [x] Cuando se crea/edita una planta offline → guardar localmente como pendiente en `sync_queue`
+- [x] Cuando vuelve la red → subir automáticamente pendientes
 - [ ] Mostrar toast "Tus cambios se han sincronizado" al terminar
 
 ### 4.4 Almacenamiento local con expo-sqlite
-- [ ] Instalar: `npx expo install expo-sqlite`
-- [ ] Crear `src/services/localDb.ts`
-  - Inicializar DB y crear tablas: `plants`, `sync_queue`, `user_profile`
-  - Funciones CRUD locales: `savePlantLocally`, `getLocalPlants`, `updatePlantSync`
-- [ ] Crear `src/services/syncService.ts`
+- [x] Instalar: `npx expo install expo-sqlite`
+- [x] Crear `src/services/localDb.ts`
+  - Inicializar DB y crear tabla `sync_queue`
+  - Implementar operaciones de cola (`enqueue`, `getPending`, `markInProgress`, `markCompleted`, `markError`)
+  - [ ] Crear tablas `plants` y `user_profile` (pendiente)
+- [x] Crear `src/services/syncService.ts`
   - `processSyncQueue()` — recorre `sync_queue` y sube pendientes a Firestore/Storage
   - Se llama automáticamente cuando `netInfo.isConnected` cambia a `true`
 
@@ -142,16 +145,16 @@
 Este es el flujo completo que se evalúa en la rúbrica (25 pts):
 
 - [ ] Usuario toca "Agregar planta" en `GardenHome`
-- [ ] Formulario `CreatePlantForm` tiene botón "Identificar con cámara"
-- [ ] Navega a `PlantCamera` → verifica permisos → abre cámara
-- [ ] Usuario toma foto → se muestra preview
-- [ ] Al confirmar → se llama `usePlantIdentification.identify(uri)`
-- [ ] Se muestra loading mientras la IA procesa
-- [ ] Se muestra `AIResultCard` con nombre, confianza y cuidados
-- [ ] Usuario toca "Usar estos datos" → los campos del formulario se pre-llenan
-- [ ] Usuario puede editar y confirma → se guarda la planta
-- [ ] Si hay conexión → se sube foto y se sincroniza con Firestore inmediatamente
-- [ ] Si no hay conexión → se guarda localmente con `syncStatus: 'pending'`
+- [x] Formulario `CreatePlantForm` tiene botón "Identificar con cámara"
+- [x] Navega a `PlantCamera` → verifica permisos → abre cámara
+- [x] Usuario toma foto → se muestra preview
+- [x] Al confirmar → se llama `usePlantIdentification.identify(uri)`
+- [x] Se muestra loading mientras la IA procesa
+- [x] Se muestra `AIResultCard` con nombre, confianza y cuidados
+- [x] Usuario toca "Usar estos datos" → los campos del formulario se pre-llenan
+- [x] Usuario puede editar y confirma → se guarda la planta
+- [x] Si hay conexión → se sube foto y se sincroniza con Firestore inmediatamente
+- [x] Si no hay conexión → se guarda en cola local de sincronización (`sync_queue`)
 
 ---
 
@@ -191,23 +194,23 @@ Grabar un video que muestre en orden:
 
 | Archivo | Tipo | Fase |
 |---------|------|------|
-| `backend/src/index.ts` | Nuevo | 1 |
-| `backend/src/routes/plantIdentification.ts` | Nuevo | 1 |
+| `backend/api/src/index.ts` | Nuevo | 1 |
+| `backend/api/src/routes/identify.ts` | Nuevo | 1 |
 | `src/services/plantIdentificationService.ts` | Nuevo | 2 |
 | `src/hooks/usePlantIdentification.ts` | Nuevo | 2 |
 | `src/screens/PlantCamera/PlantCamera.tsx` | Nuevo | 2 |
-| `app/(app)/plant-camera.tsx` | Nuevo | 2 |
+| `app/(app)/plant/identify.tsx` | Nuevo | 2 |
 | `src/components/ui/AIResultCard.tsx` | Nuevo | 2 |
 | `src/components/ui/PermissionDeniedView.tsx` | Nuevo | 3 |
 | `src/hooks/useNetworkStatus.ts` | Nuevo | 4 |
 | `src/components/ui/OfflineBanner.tsx` | Nuevo | 4 |
 | `src/services/localDb.ts` | Nuevo | 4 |
 | `src/services/syncService.ts` | Nuevo | 4 |
-| `src/types-dtos/plant.types.ts` | Modificar | 4 |
+| `src/types-dtos/plant.types.ts` | Modificar (pendiente) | 4 |
 | `src/components/ui/PlantCard.tsx` | Modificar | 4 |
 | `app/(app)/_layout.tsx` | Modificar | 4 |
 | `src/screens/GardenHome/GardenHome.tsx` | Modificar | 5 |
-| `src/components/customs/CreatePlantForm.tsx` | Modificar | 5 |
+| `src/screens/PlantDetail/CreatePlantForm.tsx` | Modificar | 5 |
 | `README.md` | Modificar | 6 |
 
 ---
