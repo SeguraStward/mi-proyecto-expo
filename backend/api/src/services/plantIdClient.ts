@@ -6,13 +6,9 @@ const PLANT_ID_BASE_URL =
 const DETAIL_FIELDS = [
   'common_names',
   'taxonomy',
-  'watering',
-  'sunlight',
-  'soil',
   'best_light_condition',
   'best_soil_type',
   'toxicity',
-  'description',
 ].join(',');
 
 interface PlantIdSuggestionDetails {
@@ -88,7 +84,6 @@ export async function identifyPlantWithPlantId(
     },
     body: JSON.stringify({
       images: [image],
-      similar_images: false,
     }),
   });
 
