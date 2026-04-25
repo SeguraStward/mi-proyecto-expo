@@ -15,6 +15,11 @@ export const plantEditSchema = z.object({
     .max(80)
     .optional()
     .default(''),
+  description: z
+    .string()
+    .max(160, 'Maximo 160 caracteres')
+    .optional()
+    .default(''),
   wateringFrequencyDays: z
     .string()
     .regex(/^\d+$/, 'Debe ser un numero')
@@ -30,7 +35,7 @@ export const plantEditSchema = z.object({
     .default(''),
   soilType: z
     .string()
-    .max(50)
+    .max(120)
     .optional()
     .default(''),
   pruningSeason: z
@@ -71,6 +76,11 @@ export const plantCreateSchema = z.object({
     .max(80)
     .optional()
     .default(''),
+  description: z
+    .string()
+    .max(160, 'Maximo 160 caracteres')
+    .optional()
+    .default(''),
   wateringFrequencyDays: z
     .string()
     .regex(/^\d+$/, 'Debe ser un numero')
@@ -86,7 +96,7 @@ export const plantCreateSchema = z.object({
     .default(''),
   soilType: z
     .string()
-    .max(50)
+    .max(120)
     .optional()
     .default(''),
 });

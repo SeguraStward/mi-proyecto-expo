@@ -19,16 +19,20 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  ActivityIndicator,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
+
+function normalizeAiText(value: string, maxLen: number): string {
+  return value.replace(/\s+/g, ' ').trim().slice(0, maxLen);
+}
 
 export default function CreatePlantForm() {
   const theme = useAppTheme();
@@ -59,6 +63,7 @@ export default function CreatePlantForm() {
       nickname: '',
       commonName: '',
       scientificName: '',
+      description: '',
       wateringFrequencyDays: '7',
       sunlight: '',
       humidity: '',
@@ -71,16 +76,16 @@ export default function CreatePlantForm() {
     setPhotoUri(identificationResult.photoUri);
     setAiConfidence(identificationResult.confidence);
     if (identificationResult.commonName) {
-      setValue('commonName', identificationResult.commonName);
+      setValue('commonName', normalizeAiText(identificationResult.commonName, 60));
     }
     if (identificationResult.scientificName) {
-      setValue('scientificName', identificationResult.scientificName);
+      setValue('scientificName', normalizeAiText(identificationResult.scientificName, 80));
     }
     if (identificationResult.care?.light) {
-      setValue('sunlight', identificationResult.care.light);
+      setValue('sunlight', normalizeAiText(identificationResult.care.light, 120));
     }
     if (identificationResult.care?.soil) {
-      setValue('soilType', identificationResult.care.soil);
+      setValue('soilType', normalizeAiText(identificationResult.care.soil, 120));
     }
     identificationStore.clear();
   }, [identificationResult, setValue]);
@@ -101,6 +106,7 @@ export default function CreatePlantForm() {
       botanicalInfo: {
         commonName: parsed.commonName,
         scientificName: parsed.scientificName ?? '',
+        description: parsed.description ?? '',
         family: '',
         origin: '',
         climate: '',
@@ -173,11 +179,13 @@ export default function CreatePlantForm() {
   return (
     <KeyboardAvoidingView
       style={s.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.select({ ios: 'padding', android: 'height' })}
+      keyboardVerticalOffset={Platform.select({ ios: 0, android: 24 })}
     >
       <ScrollView
         contentContainerStyle={s.scrollContent}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       >
         <View style={s.header}>
@@ -256,6 +264,13 @@ export default function CreatePlantForm() {
             label="NOMBRE CIENTIFICO (OPCIONAL)"
             placeholder="Ej: Monstera deliciosa"
             autoCapitalize="words"
+          />
+          <FormInput
+            control={control}
+            name="description"
+            label="DESCRIPCION BREVE (OPCIONAL)"
+            placeholder="Ej: Planta tropical de interior, facil de cuidar"
+            helperText="Max 160 caracteres"
           />
         </View>
 

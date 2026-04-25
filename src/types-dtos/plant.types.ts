@@ -12,6 +12,7 @@ export interface PlantPhoto {
 export interface BotanicalInfo {
   commonName: string;
   scientificName: string;
+  description: string;
   family: string;
   origin: string;
   climate: string;

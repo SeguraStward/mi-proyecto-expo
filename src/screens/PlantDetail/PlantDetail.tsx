@@ -23,14 +23,14 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Alert,
+    Image,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 
 // ── Componente ────────────────────────────────────────────────────────────────
@@ -93,9 +93,11 @@ export default function PlantDetail() {
   // Usar datos de Firestore si disponibles, fallback a params
   const plantName = plant?.nickname ?? plant?.botanicalInfo?.commonName ?? params.name ?? 'Planta';
   const scientificName = plant?.botanicalInfo?.scientificName ?? '';
-  const description = plant?.botanicalInfo?.origin
-    ? `Origen: ${plant.botanicalInfo.origin}. Clima: ${plant.botanicalInfo.climate ?? 'N/A'}. Familia: ${plant.botanicalInfo.family ?? 'N/A'}.`
-    : params.description ?? 'Informacion no disponible para esta especie.';
+  const description = plant?.botanicalInfo?.description?.trim()
+    ? plant.botanicalInfo.description.trim()
+    : plant?.botanicalInfo?.origin
+      ? `Origen: ${plant.botanicalInfo.origin}. Clima: ${plant.botanicalInfo.climate ?? 'N/A'}. Familia: ${plant.botanicalInfo.family ?? 'N/A'}.`
+      : params.description ?? 'Informacion no disponible para esta especie.';
 
   // Stats de Firestore
   const waterLevel = plant?.status?.waterLevel ?? 50;

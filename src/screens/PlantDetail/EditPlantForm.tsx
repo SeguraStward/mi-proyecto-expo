@@ -20,15 +20,15 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  ActivityIndicator,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 
 export default function EditPlantForm() {
@@ -64,6 +64,7 @@ export default function EditPlantForm() {
       nickname: defaultName ?? '',
       commonName: '',
       scientificName: '',
+      description: '',
       wateringFrequencyDays: defaultWatering ?? '7',
       sunlight: defaultSunlight ?? '',
       humidity: '',
@@ -88,6 +89,7 @@ export default function EditPlantForm() {
         nickname: plant.nickname ?? defaultName ?? '',
         commonName: plant.botanicalInfo?.commonName ?? '',
         scientificName: plant.botanicalInfo?.scientificName ?? '',
+        description: plant.botanicalInfo?.description ?? '',
         wateringFrequencyDays: String(plant.careRules?.wateringFrequencyDays ?? defaultWatering ?? 7),
         sunlight: plant.careRules?.sunlight ?? defaultSunlight ?? '',
         humidity: plant.careRules?.humidity ?? '',
@@ -125,6 +127,7 @@ export default function EditPlantForm() {
           }),
           commonName: parsed.commonName ?? plant?.botanicalInfo?.commonName ?? '',
           scientificName: parsed.scientificName ?? plant?.botanicalInfo?.scientificName ?? '',
+          description: parsed.description ?? plant?.botanicalInfo?.description ?? '',
         },
         careRules: {
           wateringFrequencyDays: parsed.wateringFrequencyDays,
@@ -169,11 +172,13 @@ export default function EditPlantForm() {
   return (
     <KeyboardAvoidingView
       style={s.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.select({ ios: 'padding', android: 'height' })}
+      keyboardVerticalOffset={Platform.select({ ios: 0, android: 24 })}
     >
       <ScrollView
         contentContainerStyle={s.scrollContent}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       >
         <View style={s.header}>
@@ -235,6 +240,13 @@ export default function EditPlantForm() {
             label="NOMBRE CIENTIFICO"
             placeholder="Ej: Monstera deliciosa"
             autoCapitalize="words"
+          />
+          <FormInput
+            control={control}
+            name="description"
+            label="DESCRIPCION BREVE"
+            placeholder="Ej: Planta tropical de interior, facil de cuidar"
+            helperText="Max 160 caracteres"
           />
         </View>
 
