@@ -18,7 +18,7 @@ La aplicación **Retro Garden** está estructurada en los siguientes módulos pr
 | Detalle de planta | `PlantDetail` | ✅ Sí | La información ya descargada puede servirse desde caché local. Es el contenido más consultado. |
 | Perfil de usuario | `UserProfile` | ✅ Parcial | Datos de perfil se pueden leer offline; cambios se sincronizan al volver la conexión. |
 | Creación/edición de planta | `CreatePlantForm / EditPlantForm` | ✅ Parcial | Se puede redactar y guardar localmente; la foto se sube y la IA identifica cuando haya conexión. |
-| Identificación con IA | Flujo de cámara | ❌ No | Depende de una API externa (Plant.id o similar). Sin conexión se muestra mensaje de espera y la solicitud queda en cola. |
+| Identificación con IA | Flujo de cámara | ❌ No | Depende de una API externa (Google Gemini). Sin conexión se muestra mensaje de espera y la solicitud queda en cola. |
 | Autenticación | Login / Auth | ❌ No | Firebase Auth requiere conexión. Sin embargo, si la sesión ya está activa y persistida, el usuario puede seguir usando la app. |
 | Subida de fotos | Firebase Storage | ❌ No | Requiere conexión. La foto se guarda localmente y se sube al recuperar la red. |
 
@@ -99,17 +99,43 @@ Mientras se cargan datos (con o sin conexión), se muestran placeholders animado
 
 ### 2.1 Despliegue del API
 
-El backend se desplegó en **Render** como un servicio web Node.js + Express + TypeScript ubicado en [`backend/api/`](../backend/api). El endpoint `POST /api/identify` recibe una imagen en base64 y la envía a **Plant.id v3**, devolviendo una respuesta normalizada con nombre común, científico, familia, confianza, toxicidad y cuidados sugeridos en español.
+El backend se desplegó en **Render** como un servicio web Node.js + Express + TypeScript ubicado en [`backend/api/`](../backend/api). El endpoint `POST /api/identify` recibe una imagen en base64 y la envía a **Google Gemini** (`gemini-1.5-flash` por defecto), devolviendo una respuesta normalizada con nombre común, científico, familia, confianza, toxicidad y cuidados sugeridos en español.
 
-**Razones de la elección de Plant.id:**
-- Modelo **especializado en plantas** (no genérico como Gemini Vision).
-- Devuelve **porcentaje de confianza** estructurado, requisito de la rúbrica para dar feedback al usuario.
-- Plan gratuito de 100 identificaciones/mes — suficiente para demo y desarrollo.
-- API REST simple, sin necesidad de redactar prompts ni parsear respuestas free-form.
+**Razones de la elección de Gemini:**
+- Modelo **multimodal** capaz de analizar la imagen y generar respuesta estructurada en una sola llamada.
+- Permite definir un **prompt en español** que guía a devolver JSON con los campos exactos (nombre común, científico, descripción, confianza, cuidados) — control total sobre el formato.
+- Plan gratuito generoso (60 RPM en `gemini-1.5-flash`) — suficiente para demo, desarrollo y uso real en clase.
+- Mismo proveedor que ya se usa en el ecosistema (Firebase es de Google), reduciendo dependencias externas.
 
-La API key vive **solo en el backend** como variable de entorno (`PLANT_ID_API_KEY`). La app móvil nunca tiene acceso a ella, evitando filtraciones por reverse engineering del bundle.
+La API key vive **solo en el backend** como variable de entorno (`GEMINI_API_KEY`). La app móvil nunca tiene acceso a ella, evitando filtraciones por reverse engineering del bundle.
 
 **URL del API desplegado:** https://mi-proyecto-expo.onrender.com
+**Endpoint principal:** `POST /api/identify` con body JSON `{ "imageBase64": "<base64-sin-data-url>" }`.
+
+#### Prompt usado con Gemini
+
+El backend envía esta instrucción al modelo (junto con la imagen como `inlineData`). El prompt fuerza JSON puro y limita el largo de los campos para que la app pueda renderizarlos sin parsing extra:
+
+```text
+Analiza la imagen y responde SOLO JSON valido (sin markdown) con esta estructura exacta:
+{
+  "isPlant": boolean,
+  "commonName": string,
+  "scientificName": string,
+  "confidence": number,
+  "description": string,
+  "family": string,
+  "toxicity": string,
+  "care": { "water": string, "light": string, "soil": string }
+}
+Reglas:
+- confidence entre 0 y 1.
+- description debe ser breve, maximo 160 caracteres, en espanol.
+- Si no es una planta: isPlant=false y deja strings vacios.
+- Responde en espanol para commonName/toxicity/care.
+```
+
+Configuración adicional: `temperature: 0.2` (respuestas estables) y `responseMimeType: 'application/json'` (Gemini fuerza el formato). El backend valida el JSON, tolera bloques `\`\`\`json` por si el modelo los incluye, y normaliza la confianza al rango [0, 1].
 
 ### 2.2 Identificación de plantas con IA — flujo implementado
 
@@ -131,6 +157,19 @@ La app maneja tres estados con la abstracción `PermissionService` (`src/service
 - **`granted`:** se renderiza `<CameraView />` normalmente.
 
 En ningún caso la app se bloquea o crashea. Si no se otorgan permisos, las funciones de cámara quedan deshabilitadas pero el resto del app (inventario, perfil, settings) sigue operando. El usuario puede volver a intentarlo en cualquier momento desde el botón de la pantalla.
+
+Adicionalmente, en `UserProfile → Settings` hay un botón **"CERRAR SESION"** (`signOut(auth)` de Firebase) que permite reiniciar el flujo de auth sin tener que limpiar datos del sistema operativo.
+
+#### Doble camino para agregar foto (`pickImage.ts`)
+
+La rúbrica exige que la app siga funcionando aunque no se den permisos o no haya red. Para soportarlo, el botón **"AGREGAR FOTO"** del formulario abre un `Alert` con dos opciones nativas que **no dependen del backend**:
+
+| Opción | API Expo | Permiso requerido | Funciona offline |
+|--------|----------|-------------------|------------------|
+| **Cámara** | `ImagePicker.launchCameraAsync` | Cámara | ✅ Sí |
+| **Galería** | `ImagePicker.launchImageLibraryAsync` | Media Library | ✅ Sí |
+
+El flujo de **identificación con IA** (`PlantCamera`) es un camino aparte y solo se invoca al tocar "IDENTIFICAR CON IA". Esta separación garantiza que el usuario siempre pueda agregar una planta con foto, incluso sin conexión, sin permiso de la API o sin que Gemini esté disponible.
 
 ### 2.4 Sincronización offline — implementación
 
@@ -155,11 +194,61 @@ En ningún caso la app se bloquea o crashea. Si no se otorgan permisos, las func
 
 ---
 
+### 2.5 Reglas de seguridad — Firestore y Storage
+
+Para que la sincronización funcione correctamente sin exponer datos de otros usuarios, se configuraron las siguientes reglas en la consola de Firebase:
+
+**Firestore** — cada usuario solo puede leer/escribir su propio perfil y sus propias plantas:
+
+```
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, create, update: if request.auth != null
+                                  && request.auth.uid == userId;
+    }
+    match /plants/{plantId} {
+      allow read, update, delete: if request.auth != null
+                                  && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+    }
+  }
+}
+```
+
+**Storage** — fotos públicas (lectura abierta para que las URLs de descarga funcionen sin token), escritura solo del dueño y limitada a imágenes <10 MB:
+
+```
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+    match /plants/{plantId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
+```
+
+Estas reglas validan que (1) solo usuarios autenticados escriban, (2) los archivos sean imágenes y (3) no excedan el límite de tamaño — protegiendo el bucket contra abuso aún si la app se compromete.
+
+---
+
 ## Parte 3: Repositorio y recursos
 
-- **Repositorio:** [github.com/angelsgalaxy/retro-garden](https://github.com/angelsgalaxy/retro-garden) _(actualizar con URL real)_
+- **Repositorio:** https://github.com/SeguraStward/mi-proyecto-expo
 - **API en Render:** https://mi-proyecto-expo.onrender.com
-- **Video de demostración:** _(URL pendiente de grabación)_
+- **Endpoint de identificación:** `POST https://mi-proyecto-expo.onrender.com/api/identify`
+- **Video de demostración:** _(URL pendiente — se agrega al entregar)_
 
 ---
 
@@ -167,6 +256,6 @@ En ningún caso la app se bloquea o crashea. Si no se otorgan permisos, las func
 
 - Expo Camera Docs: https://docs.expo.dev/versions/latest/sdk/camera/
 - Expo SQLite Docs: https://docs.expo.dev/versions/latest/sdk/sqlite/
-- Plant.id API: https://plant.id/
+- Google Gemini API: https://ai.google.dev/gemini-api/docs
 - React Native NetInfo: https://github.com/react-native-netinfo/react-native-netinfo
 - Firebase Offline Persistence: https://firebase.google.com/docs/firestore/manage-data/enable-offline

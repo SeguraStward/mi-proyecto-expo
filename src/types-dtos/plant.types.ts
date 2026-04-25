@@ -42,6 +42,8 @@ export interface PlantStatus {
   nextWateringDue: string;
 }
 
+export type PlantSyncStatus = 'synced' | 'pending' | 'error';
+
 export interface PlantDocument {
   id: string;
   userId: string;
@@ -50,6 +52,8 @@ export interface PlantDocument {
   botanicalInfo: BotanicalInfo;
   careRules: CareRules;
   status: PlantStatus;
+  /** Estado de sincronizacion local. Solo presente en plantas pendientes. */
+  syncStatus?: PlantSyncStatus;
   createdAt: string;
   updatedAt: string;
 }

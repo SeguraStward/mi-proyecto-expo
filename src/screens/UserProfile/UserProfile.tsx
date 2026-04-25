@@ -15,8 +15,10 @@
 import { useAuth } from '@/src/context/AuthContext';
 import { useThemeToggle } from '@/src/context/ThemeContext';
 import { useToast } from '@/src/context/ToastContext';
+import { useNetworkStatus } from '@/src/hooks/useNetworkStatus';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
 import { updateUser, uploadUserAvatar } from '@/src/services/firestore';
+import syncService from '@/src/services/syncService';
 import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/designSystem';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -27,6 +29,7 @@ import {
     ActivityIndicator,
     Alert,
     Image,
+    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -44,7 +47,7 @@ type ProfileTab = 'info' | 'settings';
 
 export default function UserProfile() {
   const { userDoc, isLoading, error } = useUserProfile();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { showToast } = useToast();
   const theme = useAppTheme();
   const { mode, toggleTheme } = useThemeToggle();
@@ -52,6 +55,9 @@ export default function UserProfile() {
   const s = getStyles(theme);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProfileTab>('info');
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const { isConnected, isInternetReachable } = useNetworkStatus();
+  const isOnline = isConnected && isInternetReachable;
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -65,29 +71,85 @@ export default function UserProfile() {
       aspect: [1, 1],
       quality: 0.8,
     });
-    if (!result.canceled && result.assets[0]) {
-      const uri = result.assets[0].uri;
-      setAvatarUri(uri);
+    if (result.canceled || !result.assets[0]) return;
 
-      if (!user?.uid) {
-        showToast({ type: 'error', message: 'Sesion no valida para subir avatar' });
-        return;
-      }
+    const uri = result.assets[0].uri;
+    setAvatarUri(uri);
 
-      try {
-        const avatarUrl = await uploadUserAvatar(user.uid, uri);
-        await updateUser(user.uid, {
-          profile: {
-            bio: userDoc?.profile?.bio ?? '',
-            avatarUrl,
-          },
-        });
-        showToast({ type: 'success', message: 'Foto de perfil actualizada' });
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : 'No se pudo subir la foto de perfil';
-        showToast({ type: 'error', message: msg });
-      }
+    if (!user?.uid) {
+      showToast({ type: 'error', message: 'Sesion no valida para subir avatar' });
+      return;
     }
+
+    const bio = userDoc?.profile?.bio ?? '';
+
+    // Sin conexion: encolar y avisar
+    if (!isOnline && Platform.OS !== 'web') {
+      try {
+        await syncService.queueUpdateUserAvatar({ uid: user.uid, avatarUri: uri, bio });
+        showToast({
+          type: 'info',
+          message: 'Sin conexion — la foto se subira al volver la red',
+        });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'No se pudo encolar';
+        showToast({ type: 'error', message: msg, duration: 5000 });
+      }
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const avatarUrl = await uploadUserAvatar(user.uid, uri);
+      await updateUser(user.uid, {
+        profile: {
+          bio,
+          avatarUrl,
+        },
+      });
+      showToast({ type: 'success', message: 'Foto de perfil actualizada' });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'No se pudo subir la foto de perfil';
+      // Mostrar el error completo para poder diagnosticar
+      console.warn('[UserProfile] uploadUserAvatar failed:', e);
+      if (Platform.OS !== 'web') {
+        await syncService
+          .queueUpdateUserAvatar({ uid: user.uid, avatarUri: uri, bio })
+          .catch(() => {});
+        showToast({
+          type: 'info',
+          message: `Foto pendiente: ${msg}`,
+          duration: 6000,
+        });
+      } else {
+        showToast({ type: 'error', message: msg, duration: 6000 });
+      }
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Cerrar sesion',
+      'Tu sesion se cerrara en este dispositivo. Tendras que iniciar sesion de nuevo.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar sesion',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logout();
+              // El layout (app) detecta la perdida de auth y redirige a /(auth)/login
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : 'Error al cerrar sesion';
+              showToast({ type: 'error', message: msg });
+            }
+          },
+        },
+      ],
+    );
   };
 
   if (isLoading) {
@@ -127,6 +189,11 @@ export default function UserProfile() {
               style={s.avatar}
               accessibilityLabel={`Foto de perfil de ${userDoc.username}`}
             />
+            {isUploadingAvatar && (
+              <View style={s.avatarUploadingOverlay}>
+                <ActivityIndicator size="small" color={theme.colors.textOnPrimary} />
+              </View>
+            )}
             <View style={s.cameraBadge}>
               <MaterialCommunityIcons name="camera" size={14} color={theme.colors.textOnPrimary} />
             </View>
@@ -280,6 +347,17 @@ export default function UserProfile() {
               accessibilityLabel="Cambiar entre tema claro y oscuro"
             />
           </View>
+
+          {/* Boton cerrar sesion */}
+          <Pressable
+            style={s.logoutBtn}
+            onPress={handleLogout}
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar sesion"
+          >
+            <MaterialCommunityIcons name="logout" size={18} color={theme.colors.error} />
+            <Text style={s.logoutBtnText}>CERRAR SESION</Text>
+          </Pressable>
         </View>
       )}
     </ScrollView>
@@ -328,6 +406,12 @@ function getStyles(t: AppTheme) {
     avatar: {
       width: '100%',
       height: '100%',
+    },
+    avatarUploadingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     cameraBadge: {
       position: 'absolute',
@@ -535,6 +619,28 @@ function getStyles(t: AppTheme) {
       fontSize: t.typography.sizes.caption,
       color: t.colors.textMuted,
       marginTop: 2,
+    },
+
+    // ── Cerrar sesion ────────────────────────────
+    logoutBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: t.spacing.sm,
+      backgroundColor: t.colors.surface,
+      borderWidth: t.borderWidths.thick,
+      borderColor: t.colors.error,
+      borderRadius: t.radius.md,
+      paddingVertical: t.spacing.lg,
+      minHeight: 52,
+      marginTop: t.spacing.md,
+      ...t.elevation.sm,
+    },
+    logoutBtnText: {
+      fontFamily: t.typography.fontFamily,
+      fontSize: t.typography.sizes.overline,
+      color: t.colors.error,
+      letterSpacing: 1,
     },
   });
 }

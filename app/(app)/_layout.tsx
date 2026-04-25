@@ -1,4 +1,5 @@
 import OfflineBanner from '@/src/components/ui/OfflineBanner';
+import SyncToaster from '@/src/components/ui/SyncToaster';
 import { useAuth } from '@/src/context/AuthContext';
 import { useAppTheme } from '@/src/theme/designSystem';
 import { Redirect, Stack } from 'expo-router';
@@ -63,6 +64,7 @@ export default function AppLayout() {
       />
       </Stack>
       <OfflineBanner />
+      <SyncToaster />
     </View>
   );
 }

@@ -140,43 +140,82 @@ export default function CreatePlantForm() {
       updatedAt: now,
     };
 
-    try {
-      if (!isOnline && Platform.OS !== 'web') {
+    // ── 1. Offline: encolar todo y salir ─────────────────
+    if (!isOnline && Platform.OS !== 'web') {
+      try {
         await syncService.queueCreatePlant({ plantData, photoUri });
         showToast({
           type: 'info',
           message: 'Sin conexion — se sincronizara al volver la red',
         });
         setTimeout(() => router.back(), 800);
-        return;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'No se pudo encolar';
+        showToast({ type: 'error', message: msg });
+      } finally {
+        setIsSaving(false);
       }
+      return;
+    }
 
-      const plantId = await createPlant(plantData);
-      if (photoUri) {
+    // ── 2. Online: crear planta primero ──────────────────
+    let plantId: string;
+    try {
+      plantId = await createPlant(plantData);
+    } catch (e) {
+      // Falla en createPlant: la planta NO se creo, encolar todo es seguro
+      const msg = e instanceof Error ? e.message : 'Error al crear planta';
+      if (Platform.OS !== 'web') {
+        await syncService.queueCreatePlant({ plantData, photoUri }).catch(() => {});
+        showToast({
+          type: 'info',
+          message: `${msg} — se reintentara automaticamente`,
+          duration: 5000,
+        });
+        setTimeout(() => router.back(), 1200);
+      } else {
+        showToast({ type: 'error', message: msg, duration: 5000 });
+      }
+      setIsSaving(false);
+      return;
+    }
+
+    // ── 3. Subir foto (si hay). Si falla, encolar SOLO la foto ─
+    if (photoUri) {
+      try {
         const photoUrl = await uploadPlantPhoto(plantId, photoUri);
         await upsertPlant(plantId, {
           photos: [{ url: photoUrl, isPrimary: true, caption: '', takenAt: now }],
         });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Error al subir foto';
+        if (Platform.OS !== 'web') {
+          await syncService
+            .queueUploadPlantPhoto({
+              plantId,
+              photoUri,
+              nickname: plantData.nickname,
+              commonName: plantData.botanicalInfo.commonName,
+              scientificName: plantData.botanicalInfo.scientificName,
+            })
+            .catch(() => {});
+          showToast({
+            type: 'info',
+            message: `Planta guardada. Foto pendiente: ${msg}`,
+            duration: 5000,
+          });
+        } else {
+          showToast({ type: 'error', message: `Foto: ${msg}`, duration: 5000 });
+        }
+        setTimeout(() => router.back(), 1200);
+        setIsSaving(false);
+        return;
       }
-      showToast({ type: 'success', message: 'Planta agregada al jardin!' });
-      setTimeout(() => router.back(), 600);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error al crear planta';
-      if (Platform.OS !== 'web') {
-        await syncService
-          .queueCreatePlant({ plantData, photoUri })
-          .catch(() => {});
-        showToast({
-          type: 'info',
-          message: 'Fallo al guardar — se reintentara automaticamente',
-        });
-        setTimeout(() => router.back(), 800);
-      } else {
-        showToast({ type: 'error', message: msg });
-      }
-    } finally {
-      setIsSaving(false);
     }
+
+    showToast({ type: 'success', message: 'Planta agregada al jardin!' });
+    setTimeout(() => router.back(), 600);
+    setIsSaving(false);
   };
 
   return (

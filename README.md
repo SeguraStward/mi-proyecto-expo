@@ -19,8 +19,8 @@ App móvil de inventario de plantas con estética RPG/pixel art (Stardew Valley)
 | Almacenamiento de archivos | Firebase Storage |
 | Auth | Firebase Authentication (Google OAuth) |
 | Almacenamiento local | expo-sqlite (sync queue offline) |
-| Cámara | expo-camera |
-| Identificación IA | Plant.id v3 (vía backend en Render) |
+| Cámara | expo-camera + expo-image-picker |
+| Identificación IA | Google Gemini (`gemini-1.5-flash`, vía backend en Render) |
 | Backend | Node.js + Express + TypeScript |
 | Animaciones | react-native-reanimated v4 |
 | UI | Design system propio con `useAppTheme()` |
@@ -31,7 +31,7 @@ App móvil de inventario de plantas con estética RPG/pixel art (Stardew Valley)
 
 ```bash
 # 1. Clonar el repositorio
-git clone <url-del-repo>
+git clone https://github.com/SeguraStward/mi-proyecto-expo.git
 cd mi-proyecto-expo
 
 # 2. Instalar dependencias
@@ -70,25 +70,26 @@ EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=
 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=
 
 # URL del backend de identificacion (Render)
-EXPO_PUBLIC_PLANT_API_URL=https://<tu-servicio>.onrender.com
+EXPO_PUBLIC_PLANT_API_URL=https://mi-proyecto-expo.onrender.com
 ```
 
 ---
 
 ## Backend — API de identificación de plantas
 
-El backend está en `backend/api/`. Es un servidor Express que hace de proxy entre la app y Plant.id, para que la API key nunca quede expuesta en el bundle móvil.
+El backend está en `backend/api/`. Es un servidor Express que actúa como proxy entre la app y **Google Gemini** (`gemini-1.5-flash`), para que la API key nunca quede expuesta en el bundle móvil. Soporta también Plant.id como provider alternativo (configurable vía `AI_PROVIDER`).
 
 ```bash
 cd backend/api
 npm install
-cp .env.example .env   # agregar PLANT_ID_API_KEY
+cp .env.example .env   # agregar GEMINI_API_KEY
 npm run dev            # desarrollo local (puerto 3000)
 ```
 
 Instrucciones de deploy en Render: [backend/api/README.md](backend/api/README.md).
 
-**URL del API en Render:** _(pendiente — actualizar aquí tras el deploy)_
+**URL del API en Render:** https://mi-proyecto-expo.onrender.com
+**Endpoint de identificación:** `POST /api/identify` con body `{ "imageBase64": "..." }`
 
 ---
 
@@ -99,12 +100,16 @@ Instrucciones de deploy en Render: [backend/api/README.md](backend/api/README.md
 - Estadísticas de jardín: total, plantas que necesitan agua, racha máxima
 - Pull-to-refresh desde Firestore
 
-### Identificación con IA (Plant.id)
+### Identificación con IA (Google Gemini)
 1. Botón "IDENTIFICAR CON IA" en el formulario "Nueva Planta"
 2. Cámara con flip frontal/trasera y control de flash
 3. Preview de la foto antes de enviar
-4. Resultado con nombre común, científico, familia, **barra de confianza %**, toxicidad y cuidados
-5. "Usar estos datos" pre-llena el formulario y muestra badge con porcentaje de confianza
+4. La foto se envía como base64 al backend → backend llama a `gemini-1.5-flash` con un prompt en español que pide JSON estructurado
+5. Resultado con nombre común, científico, familia, **barra de confianza %** (verde ≥75 / ámbar 45–75 / rojo <45), toxicidad y cuidados sugeridos
+6. "Usar estos datos" pre-llena el formulario y muestra badge con porcentaje de confianza
+
+### Foto sin IA (offline-friendly)
+Aparte del flujo con IA, el botón "AGREGAR FOTO" abre un menú con dos opciones offline: **Cámara** (`launchCameraAsync`) y **Galería** (`launchImageLibraryAsync`). Ninguna requiere red — la foto se sube cuando vuelva la conexión.
 
 ### Funcionamiento offline
 - Plantas creadas sin conexión se guardan en SQLite (`sync_queue`)
@@ -169,6 +174,6 @@ python seed_firestore.py --credentials ./serviceAccountKey.json
 | Recurso | Enlace |
 |---------|--------|
 | Documento de análisis | [docs/ACTIVIDAD3_ANALISIS.md](docs/ACTIVIDAD3_ANALISIS.md) |
-| API en Render | _(pendiente)_ |
-| Video de demostración | _(pendiente)_ |
-| Repositorio | _(URL del repo)_ |
+| API en Render | https://mi-proyecto-expo.onrender.com |
+| Repositorio | https://github.com/SeguraStward/mi-proyecto-expo |
+| Video de demostración | _(pendiente — se agrega al entregar)_ |

@@ -3,7 +3,12 @@ import { Platform } from 'react-native';
 
 const DB_NAME = 'retro_garden.db';
 
-export type SyncOperation = 'create_plant' | 'update_plant' | 'delete_plant';
+export type SyncOperation =
+  | 'create_plant'
+  | 'update_plant'
+  | 'delete_plant'
+  | 'upload_plant_photo'
+  | 'update_user_avatar';
 export type SyncStatus = 'pending' | 'in_progress' | 'error';
 
 export interface SyncQueueRow {

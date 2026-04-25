@@ -1,14 +1,62 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Alert, Platform } from 'react-native';
 
-export async function pickImage(): Promise<string | null> {
+export type PickImageSource = 'camera' | 'library';
+
+/**
+ * Abre un menu para que el usuario elija camara o galeria.
+ * Ambas opciones son 100% offline — no requieren red ni IA.
+ * Pasa `source` para forzar una opcion sin mostrar el menu.
+ */
+export async function pickImage(source?: PickImageSource): Promise<string | null> {
   if (Platform.OS === 'web') {
     return pickImageWeb();
   }
-  return pickImageNative();
+  if (source === 'camera') return pickFromCamera();
+  if (source === 'library') return pickFromLibrary();
+  return askSource();
 }
 
-async function pickImageNative(): Promise<string | null> {
+function askSource(): Promise<string | null> {
+  return new Promise((resolve) => {
+    Alert.alert(
+      'Agregar foto',
+      'Como queres elegir la foto?',
+      [
+        {
+          text: 'Camara',
+          onPress: async () => resolve(await pickFromCamera()),
+        },
+        {
+          text: 'Galeria',
+          onPress: async () => resolve(await pickFromLibrary()),
+        },
+        { text: 'Cancelar', style: 'cancel', onPress: () => resolve(null) },
+      ],
+      { cancelable: true, onDismiss: () => resolve(null) },
+    );
+  });
+}
+
+async function pickFromCamera(): Promise<string | null> {
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert('Permiso requerido', 'Necesitamos acceso a la camara.');
+    return null;
+  }
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.7,
+  });
+  if (!result.canceled && result.assets[0]) {
+    return result.assets[0].uri;
+  }
+  return null;
+}
+
+async function pickFromLibrary(): Promise<string | null> {
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (status !== 'granted') {
     Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galeria.');

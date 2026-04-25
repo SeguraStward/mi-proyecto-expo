@@ -1,4 +1,3 @@
-import * as FileSystem from 'expo-file-system/legacy';
 import {
     addDoc,
     collection,
@@ -18,41 +17,27 @@ import type { UpdateUserDTO, UserDocument } from '@/src/types-dtos/user.types';
 import { db, storage } from './firebase';
 
 /**
- * Convierte una cadena base64 a Uint8Array.
- * Usa atob (disponible en Hermes) en lugar de Buffer/Blob
- * para compatibilidad con React Native + Firebase JS SDK.
+ * Sube una imagen a Firebase Storage usando fetch(uri).blob().
+ *
+ * En React Native (Hermes), `new Blob([uint8Array])` falla con
+ * "creating blobs from arraybuffer are not supported". Pero `fetch(fileUri).blob()`
+ * devuelve un Blob nativo respaldado por el archivo, sin pasar por ese constructor.
+ * Firebase JS SDK pasa el Blob directo a XHR.send() y funciona.
  */
-function base64ToUint8Array(base64: string): Uint8Array {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
-
 async function uploadImageToStorage(path: string, imageUri: string): Promise<string> {
   const storageRef = ref(storage, path);
 
-  let base64: string;
-  let contentType = 'image/jpeg';
-
-  if (imageUri.startsWith('data:')) {
-    // Extraer mime type y base64 del data URL
-    const match = imageUri.match(/^data:(.+?);base64,(.+)$/s);
-    if (!match) throw new Error('Formato data URL invalido');
-    contentType = match[1];
-    base64 = match[2];
-  } else {
-    // Leer archivo local como base64
-    base64 = await FileSystem.readAsStringAsync(imageUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+  const response = await fetch(imageUri);
+  if (!response.ok && imageUri.startsWith('http')) {
+    throw new Error(`No se pudo leer la imagen (${response.status})`);
+  }
+  const blob = await response.blob();
+  if (blob.size === 0) {
+    throw new Error('Imagen vacia');
   }
 
-  // uploadBytes con Uint8Array funciona en React Native (sin Blob ni uploadString)
-  const bytes = base64ToUint8Array(base64);
-  await uploadBytes(storageRef, bytes, { contentType });
+  const contentType = blob.type && blob.type !== '' ? blob.type : 'image/jpeg';
+  await uploadBytes(storageRef, blob, { contentType });
   return getDownloadURL(storageRef);
 }
 
