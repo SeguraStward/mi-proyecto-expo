@@ -7,7 +7,10 @@ interface UsePlantIdentificationReturn {
   result: PlantIdentificationResult | null;
   isLoading: boolean;
   error: string | null;
-  identify: (photoUri: string) => Promise<PlantIdentificationResult | null>;
+  identify: (
+    photoUri: string,
+    options?: { imageBase64?: string }
+  ) => Promise<PlantIdentificationResult | null>;
   reset: () => void;
 }
 
@@ -17,11 +20,14 @@ export function usePlantIdentification(): UsePlantIdentificationReturn {
   const [error, setError] = useState<string | null>(null);
 
   const identify = useCallback(
-    async (photoUri: string): Promise<PlantIdentificationResult | null> => {
+    async (
+      photoUri: string,
+      options?: { imageBase64?: string }
+    ): Promise<PlantIdentificationResult | null> => {
       setIsLoading(true);
       setError(null);
       try {
-        const identification = await PlantIdentificationService.identify(photoUri);
+        const identification = await PlantIdentificationService.identify(photoUri, options);
         setResult(identification);
         return identification;
       } catch (err) {

@@ -62,6 +62,25 @@ function buildCare(details?: PlantIdSuggestionDetails) {
   return { water, light, soil };
 }
 
+function extractAndValidateBase64(imageBase64: string): string {
+  const clean = imageBase64.replace(/\s/g, '').trim();
+
+  const commaIndex = clean.indexOf(',');
+  const payload = clean.startsWith('data:') && commaIndex >= 0
+    ? clean.slice(commaIndex + 1)
+    : clean;
+
+  if (!payload || payload.length < 128) {
+    throw new Error('Imagen invalida: base64 vacio o incompleto');
+  }
+
+  if (!/^[A-Za-z0-9+/=]+$/.test(payload)) {
+    throw new Error('Imagen invalida: base64 con caracteres no permitidos');
+  }
+
+  return payload;
+}
+
 export async function identifyPlantWithPlantId(
   imageBase64: string,
   apiKey: string
@@ -70,11 +89,7 @@ export async function identifyPlantWithPlantId(
     DETAIL_FIELDS
   )}&language=es`;
 
-  // Plant.id v3 requiere el prefijo data URI y sin saltos de linea
-  const clean = imageBase64.replace(/\s/g, '');
-  const image = clean.startsWith('data:')
-    ? clean
-    : `data:image/jpeg;base64,${clean}`;
+  const image = extractAndValidateBase64(imageBase64);
 
   const response = await fetch(url, {
     method: 'POST',

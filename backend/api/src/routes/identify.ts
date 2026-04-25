@@ -26,6 +26,18 @@ router.post('/', async (req: Request<unknown, unknown, IdentifyBody>, res: Respo
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error desconocido';
     console.error('[identify] error:', message);
+
+    if (message.startsWith('Imagen invalida')) {
+      return res.status(400).json({ error: message });
+    }
+
+    const upstreamStatus = message.match(/Plant\.id error (\d{3})/)?.[1];
+    if (upstreamStatus) {
+      const status = Number(upstreamStatus);
+      const mappedStatus = status >= 500 ? 502 : status;
+      return res.status(mappedStatus).json({ error: message });
+    }
+
     return res.status(502).json({ error: message });
   }
 });

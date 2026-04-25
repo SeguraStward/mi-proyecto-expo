@@ -53,11 +53,13 @@ export default function PlantCamera() {
 
   const [mode, setMode] = useState<Mode>('camera');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoBase64, setPhotoBase64] = useState<string | undefined>();
 
   const handleCapture = async () => {
-    const photo = await takePhoto({ quality: 0.8 });
+    const photo = await takePhoto({ quality: 0.8, base64: true });
     if (photo?.uri) {
       setPhotoUri(photo.uri);
+      setPhotoBase64(photo.base64);
       setMode('preview');
     } else {
       showToast({ type: 'error', message: cameraError ?? 'No se pudo tomar la foto' });
@@ -66,7 +68,9 @@ export default function PlantCamera() {
 
   const handleIdentify = async () => {
     if (!photoUri) return;
-    const identification = await identify(photoUri);
+    const identification = await identify(photoUri, {
+      imageBase64: photoBase64,
+    });
     if (identification) {
       setMode('result');
     }
@@ -74,6 +78,7 @@ export default function PlantCamera() {
 
   const handleRetake = () => {
     setPhotoUri(null);
+    setPhotoBase64(undefined);
     resetIdentification();
     setMode('camera');
   };
