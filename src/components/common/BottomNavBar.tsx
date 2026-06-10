@@ -1,37 +1,45 @@
 /**
  * ============================================================================
- * BottomNavBar — Barra de navegacion inferior Material Design 3
+ * BottomNavBar — Barra de navegacion inferior animada (Material Design 3)
  * ============================================================================
  *
- * Implementacion conforme a las directrices de M3 Navigation Bar:
- *   - Indicador activo tipo pill (64x32dp, borderRadius 16)
- *   - Labels siempre visibles debajo de los iconos
- *   - Contraste WCAG AA entre estados activo/inactivo
- *   - Altura de contenedor: 80dp (especificacion M3)
- *   - Area de toque minima: 48dp (Apple HIG + M3)
- *   - Bordes gruesos pixel art para estetica retro Stardew Valley
+ * Patron M3 "navigation bar" con animacion de ahorro de espacio:
+ *   - Las pestañas INACTIVAS se encogen a solo icono (pill compacta).
+ *   - La pestaña ACTIVA expande su etiqueta dentro de una pill, con animacion
+ *     suave (react-native-reanimated).
+ *   - Altura de contenedor reducida vs. la version estatica.
+ *   - Bordes gruesos pixel art para estetica retro Stardew Valley.
  *
- * Accesibilidad:
- *   - accessibilityRole="tab" por cada destino
- *   - accessibilityState.selected para estado activo
- *   - Labels descriptivos via tabBarAccessibilityLabel
+ * Accesibilidad (no se degrada al ocultar labels):
+ *   - accessibilityRole="tab" + accessibilityState.selected por destino.
+ *   - accessibilityLabel SIEMPRE presente (tabBarAccessibilityLabel/title),
+ *     asi los lectores de pantalla anuncian cada pestaña aunque su texto
+ *     este colapsado visualmente.
+ *   - Area de toque por pestaña: flex:1 + minHeight 48 (Apple HIG + M3).
  *
  * @see https://m3.material.io/components/navigation-bar/overview
- * @see docs/DESIGN_SYSTEM_RETRO.md
  * ============================================================================
  */
 
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+    Keyboard,
     Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
+import Animated, {
+    interpolateColor,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { AppTheme } from '@/src/theme';
 import { useAppTheme } from '@/src/theme';
 
 function withAlpha(hexColor: string, alpha: number): string {
@@ -54,128 +62,156 @@ function withAlpha(hexColor: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
 }
 
-export function BottomNavBar({
-  state,
-  descriptors,
-  navigation,
-}: BottomTabBarProps) {
+interface TabButtonProps {
+  theme: AppTheme;
+  label: string;
+  isFocused: boolean;
+  accessibilityLabel?: string;
+  renderIcon?: (args: { color: string; focused: boolean; size: number }) => React.ReactNode;
+  onPress: () => void;
+  onLongPress: () => void;
+}
+
+function TabButton({
+  theme,
+  label,
+  isFocused,
+  accessibilityLabel,
+  renderIcon,
+  onPress,
+  onLongPress,
+}: TabButtonProps) {
+  // 1 = activa (label expandida), 0 = inactiva (solo icono).
+  const progress = useSharedValue(isFocused ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(isFocused ? 1 : 0, { duration: 220 });
+  }, [isFocused, progress]);
+
+  const pillStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      ['rgba(0,0,0,0)', theme.colors.primaryPale],
+    ),
+    paddingHorizontal: 10 + progress.value * 6,
+  }));
+
+  const labelStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    maxWidth: progress.value * 96,
+    marginLeft: progress.value * 6,
+  }));
+
+  const iconColor = isFocused ? theme.colors.primary : theme.colors.textMuted;
+
+  return (
+    <TouchableOpacity
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isFocused }}
+      accessibilityLabel={accessibilityLabel ?? label}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      activeOpacity={0.7}
+      style={styles.tab}
+    >
+      <Animated.View style={[styles.pill, pillStyle]}>
+        {renderIcon?.({ color: iconColor, focused: isFocused, size: 22 })}
+        <Animated.View style={[styles.labelWrap, labelStyle]}>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.label,
+              { color: theme.colors.primary, fontFamily: theme.typography.fontFamily },
+            ]}
+          >
+            {label}
+          </Text>
+        </Animated.View>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
+export function BottomNavBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const bottomOffset = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 8);
 
+  // Ocultar la barra flotante mientras el teclado este abierto, para no tapar
+  // el campo de texto (p.ej. el composer del chat).
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  useEffect(() => {
+    const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const s1 = Keyboard.addListener(showEvt, () => setKeyboardVisible(true));
+    const s2 = Keyboard.addListener(hideEvt, () => setKeyboardVisible(false));
+    return () => {
+      s1.remove();
+      s2.remove();
+    };
+  }, []);
+
+  if (keyboardVisible) return null;
+
   return (
-    <View
-      style={[
-        styles.wrapper,
-        {
-          bottom: bottomOffset,
-        },
-      ]}
-    >
+    <View style={[styles.wrapper, { bottom: bottomOffset }]}>
       <View
         style={[
-        styles.container,
-        {
-          backgroundColor: withAlpha(theme.colors.surface, 0.86),
-          borderWidth: theme.borderWidths.thick,
-          borderColor: withAlpha(theme.colors.border, 0.9),
-          // Sombra solida pixel art (solo hacia arriba)
-          ...Platform.select({
-            ios: {
-              shadowColor: theme.colors.shadow,
-              shadowOffset: { width: 0, height: 10 },
-              shadowOpacity: 0.8,
-              shadowRadius: 12,
-            },
-            android: {
-              elevation: 14,
-            },
-          }),
-        },
-      ]}
-    >
-      {state.routes.map((route, index) => {
-        const { options } = descriptors[route.key];
-        const isFocused = state.index === index;
+          styles.container,
+          {
+            backgroundColor: withAlpha(theme.colors.surface, 0.92),
+            borderWidth: theme.borderWidths.thick,
+            borderColor: withAlpha(theme.colors.border, 0.9),
+            ...Platform.select({
+              ios: {
+                shadowColor: theme.colors.shadow,
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.8,
+                shadowRadius: 10,
+              },
+              android: { elevation: 12 },
+            }),
+          },
+        ]}
+      >
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const isFocused = state.index === index;
 
-        // Obtener el label del tab
-        const label =
-          typeof options.tabBarLabel === 'string'
-            ? options.tabBarLabel
-            : options.title ?? route.name;
+          const label =
+            typeof options.tabBarLabel === 'string'
+              ? options.tabBarLabel
+              : options.title ?? route.name;
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
 
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params);
-          }
-        };
+          const onLongPress = () => {
+            navigation.emit({ type: 'tabLongPress', target: route.key });
+          };
 
-        const onLongPress = () => {
-          navigation.emit({
-            type: 'tabLongPress',
-            target: route.key,
-          });
-        };
-
-        // Colores segun estado activo/inactivo
-        const iconColor = isFocused
-          ? theme.colors.primary
-          : theme.colors.textMuted;
-
-        const labelColor = isFocused
-          ? theme.colors.primary
-          : theme.colors.textMuted;
-
-        return (
-          <TouchableOpacity
-            key={route.key}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isFocused }}
-            accessibilityLabel={options.tabBarAccessibilityLabel}
-            onPress={onPress}
-            onLongPress={onLongPress}
-            activeOpacity={0.7}
-            style={styles.tab}
-          >
-            {/* Indicador M3 — pill detras del icono cuando activo */}
-            <View
-              style={[
-                styles.indicator,
-                isFocused && {
-                  backgroundColor: theme.colors.primaryPale,
-                  borderRadius: theme.radius.pill,
-                },
-              ]}
-            >
-              {options.tabBarIcon?.({
-                color: iconColor,
-                focused: isFocused,
-                size: 24,
-              })}
-            </View>
-
-            {/* Label — siempre visible segun especificacion M3 */}
-            <Text
-              style={[
-                styles.label,
-                {
-                  color: labelColor,
-                  fontFamily: theme.typography.fontFamily,
-                },
-              ]}
-              numberOfLines={1}
-            >
-              {label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+          return (
+            <TabButton
+              key={route.key}
+              theme={theme}
+              label={label}
+              isFocused={isFocused}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              renderIcon={options.tabBarIcon}
+              onPress={onPress}
+              onLongPress={onLongPress}
+            />
+          );
+        })}
       </View>
     </View>
   );
@@ -190,31 +226,32 @@ const styles = StyleSheet.create({
   },
   container: {
     flexDirection: 'row',
-    height: 74,
+    height: 58,
     alignItems: 'center',
     justifyContent: 'space-around',
-    borderRadius: 24,
+    borderRadius: 22,
     overflow: 'hidden',
-    paddingBottom: 6,
-    paddingTop: 2,
+    paddingHorizontal: 4,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 8,
     minHeight: 48,
   },
-  indicator: {
-    width: 64,
-    height: 32,
+  pill: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
-    borderRadius: 16,
+    height: 40,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  labelWrap: {
+    overflow: 'hidden',
   },
   label: {
-    fontSize: 8,
+    fontSize: 9,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },

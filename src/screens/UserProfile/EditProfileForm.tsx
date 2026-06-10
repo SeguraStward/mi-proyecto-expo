@@ -28,10 +28,12 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function EditProfileForm() {
   const theme = useAppTheme();
   const s = getStyles(theme);
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
   const { userDoc, isLoading: profileLoading, error: profileError } = useUserProfile();
@@ -117,7 +119,10 @@ export default function EditProfileForm() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={s.scrollContent}
+        contentContainerStyle={[
+          s.scrollContent,
+          { paddingBottom: insets.bottom + theme.spacing['5xl'] },
+        ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >

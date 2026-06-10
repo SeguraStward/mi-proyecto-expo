@@ -67,6 +67,8 @@ export const Input = forwardRef<TextInput, InputProps>(
               {
                 color: theme.colors.textSecondary,
                 marginBottom: theme.spacing.xs + 2,
+                fontFamily: theme.typography.fontFamily,
+                fontSize: theme.typography.sizes.overline,
               },
             ]}
           >
@@ -96,6 +98,8 @@ export const Input = forwardRef<TextInput, InputProps>(
               borderColor,
               borderRadius: theme.radius.md,
               color: theme.colors.textPrimary,
+              fontFamily: theme.typography.fontFamilyMono,
+              fontSize: theme.typography.sizes.caption,
             },
             multiline && styles.multiline,
             disabled && { opacity: 0.5 },
@@ -104,11 +108,29 @@ export const Input = forwardRef<TextInput, InputProps>(
           {...rest}
         />
         {error ? (
-          <Text style={[styles.bottomText, { color: theme.colors.error }]}>
+          <Text
+            style={[
+              styles.bottomText,
+              {
+                color: theme.colors.error,
+                fontFamily: theme.typography.fontFamilyMono,
+                fontSize: theme.typography.sizes.caption,
+              },
+            ]}
+          >
             {error}
           </Text>
         ) : helperText ? (
-          <Text style={[styles.bottomText, { color: theme.colors.textMuted }]}>
+          <Text
+            style={[
+              styles.bottomText,
+              {
+                color: theme.colors.textMuted,
+                fontFamily: theme.typography.fontFamilyMono,
+                fontSize: theme.typography.sizes.caption,
+              },
+            ]}
+          >
             {helperText}
           </Text>
         ) : null}

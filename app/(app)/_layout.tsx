@@ -1,6 +1,7 @@
 import OfflineBanner from '@/src/components/ui/OfflineBanner';
 import SyncToaster from '@/src/components/ui/SyncToaster';
 import { useAuth } from '@/src/context/AuthContext';
+import { ChatProvider } from '@/src/context/ChatContext';
 import { useAppTheme } from '@/src/theme/designSystem';
 import { Redirect, Stack } from 'expo-router';
 import { View } from 'react-native';
@@ -18,6 +19,7 @@ export default function AppLayout() {
   }
 
   return (
+    <ChatProvider>
     <View style={{ flex: 1 }}>
       <Stack
       screenOptions={{
@@ -66,5 +68,6 @@ export default function AppLayout() {
       <OfflineBanner />
       <SyncToaster />
     </View>
+    </ChatProvider>
   );
 }

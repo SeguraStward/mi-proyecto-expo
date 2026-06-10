@@ -95,7 +95,11 @@ export const Chip: React.FC<ChipProps> = ({
       <Text
         style={[
           styles.text,
-          { color: textColor },
+          {
+            color: textColor,
+            fontFamily: theme.typography.fontFamily,
+            fontSize: theme.typography.sizes.overline,
+          },
         ]}
       >
         {label}

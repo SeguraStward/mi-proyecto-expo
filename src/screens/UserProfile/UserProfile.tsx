@@ -12,7 +12,14 @@
  * ============================================================================
  */
 
+import { AppText } from '@/src/components/ui/AppText';
+import { Chip } from '@/src/components/ui/Chip';
 import { useAuth } from '@/src/context/AuthContext';
+import {
+    FONT_OPTIONS,
+    SIZE_OPTIONS,
+    useFontPreferences,
+} from '@/src/context/FontPreferencesContext';
 import { useThemeToggle } from '@/src/context/ThemeContext';
 import { useToast } from '@/src/context/ToastContext';
 import { useNetworkStatus } from '@/src/hooks/useNetworkStatus';
@@ -51,6 +58,7 @@ export default function UserProfile() {
   const { showToast } = useToast();
   const theme = useAppTheme();
   const { mode, toggleTheme } = useThemeToggle();
+  const { bodyFont, setBodyFont, sizeKey, setSizeKey } = useFontPreferences();
   const router = useRouter();
   const s = getStyles(theme);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
@@ -348,6 +356,59 @@ export default function UserProfile() {
             />
           </View>
 
+          {/* Selector de fuente de lectura */}
+          <View style={s.settingCol}>
+            <View style={s.settingInfo}>
+              <MaterialCommunityIcons
+                name="format-font"
+                size={18}
+                color={theme.colors.textSecondary}
+              />
+              <View style={s.settingTexts}>
+                <Text style={s.settingLabel}>Fuente</Text>
+                <Text style={s.settingHint}>Aplica a todo el texto de la app</Text>
+              </View>
+            </View>
+            <View style={s.optionRow}>
+              {FONT_OPTIONS.map((opt) => (
+                <Chip
+                  key={opt.key}
+                  label={opt.label}
+                  active={bodyFont === opt.key}
+                  onPress={() => setBodyFont(opt.key)}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Ajuste de tamano de letra */}
+          <View style={s.settingCol}>
+            <View style={s.settingInfo}>
+              <MaterialCommunityIcons
+                name="format-size"
+                size={18}
+                color={theme.colors.textSecondary}
+              />
+              <View style={s.settingTexts}>
+                <Text style={s.settingLabel}>Tamano de letra</Text>
+                <Text style={s.settingHint}>Pequeno a muy grande</Text>
+              </View>
+            </View>
+            <View style={s.optionRow}>
+              {SIZE_OPTIONS.map((opt) => (
+                <Chip
+                  key={opt.key}
+                  label={opt.label}
+                  active={sizeKey === opt.key}
+                  onPress={() => setSizeKey(opt.key)}
+                />
+              ))}
+            </View>
+            <AppText preset="body" color={theme.colors.textSecondary} style={s.preview}>
+              Vista previa del texto
+            </AppText>
+          </View>
+
           {/* Boton cerrar sesion */}
           <Pressable
             style={s.logoutBtn}
@@ -605,6 +666,24 @@ function getStyles(t: AppTheme) {
       alignItems: 'center',
       flex: 1,
       gap: t.spacing.md,
+    },
+    // ── Card de opciones en columna (fuente / tamano) ──
+    settingCol: {
+      backgroundColor: t.colors.surface,
+      borderWidth: t.borderWidths.thick,
+      borderColor: t.colors.border,
+      borderRadius: t.radius.md,
+      padding: t.spacing.lg,
+      gap: t.spacing.md,
+      ...t.elevation.sm,
+    },
+    optionRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: t.spacing.sm,
+    },
+    preview: {
+      marginTop: t.spacing.xs,
     },
     settingTexts: {
       flex: 1,

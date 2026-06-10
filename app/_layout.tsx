@@ -1,4 +1,7 @@
+import { Nunito_400Regular, Nunito_600SemiBold } from '@expo-google-fonts/nunito';
+import { Poppins_400Regular, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
 import { PressStart2P_400Regular, useFonts } from '@expo-google-fonts/press-start-2p';
+import { Quicksand_400Regular, Quicksand_600SemiBold } from '@expo-google-fonts/quicksand';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -8,6 +11,7 @@ import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 
 import { AuthProvider } from '@/src/context/AuthContext';
+import { FontPreferencesProvider } from '@/src/context/FontPreferencesContext';
 import { AppThemeProvider, useThemeToggle } from '@/src/context/ThemeContext';
 import { ToastProvider } from '@/src/context/ToastContext';
 
@@ -58,6 +62,12 @@ function RootNavigator() {
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     PressStart2P: PressStart2P_400Regular,
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+    Quicksand_400Regular,
+    Quicksand_600SemiBold,
   });
 
   useEffect(() => {
@@ -77,9 +87,11 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <AppThemeProvider>
-        <ToastProvider>
-          <RootNavigator />
-        </ToastProvider>
+        <FontPreferencesProvider>
+          <ToastProvider>
+            <RootNavigator />
+          </ToastProvider>
+        </FontPreferencesProvider>
       </AppThemeProvider>
     </AuthProvider>
   );

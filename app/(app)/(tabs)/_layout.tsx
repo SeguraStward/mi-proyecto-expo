@@ -46,11 +46,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explorar',
+          title: 'Chat',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={24} name="leaf.fill" color={color} />
+            <IconSymbol size={24} name="bubble.left.fill" color={color} />
           ),
-          tabBarAccessibilityLabel: 'Explorar biblioteca de plantas',
+          tabBarAccessibilityLabel: 'Chat — Sala general',
         }}
       />
       <Tabs.Screen

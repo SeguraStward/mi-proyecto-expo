@@ -8,20 +8,13 @@
  *   tipográficos definidos en el Design System (hero, title, subtitle, body,
  *   bodySmall, caption, overline). Escala fluida: 24→20→16→15→14→13→11.
  *
+ *   La fuente y el tamaño elegidos por el usuario se inyectan en el tema vía
+ *   useAppTheme(), así que aquí se leen de theme.typography (familia + sizes
+ *   ya escalados) y el componente reacciona automáticamente.
+ *
  * Uso:
  *   <AppText preset="title">Mi Título</AppText>
  *   <AppText preset="caption" color={theme.colors.textMuted}>Fecha</AppText>
- *
- * Props:
- *   - preset: Define tamaño, peso y line-height según el DS.
- *   - color: Override opcional del color de texto.
- *   - style: Estilos adicionales de React Native.
- *   - children: Contenido textual.
- *   - ...rest: Todas las props de React Native Text (numberOfLines, etc.).
- *
- * Accesibilidad:
- *   - accessibilityRole="text" por defecto para lectores de pantalla.
- *   - Hereda props de accesibilidad de Text.
  *
  * @see docs/DESIGN_SYSTEM.md — Sección A.2 Tipografía
  * ============================================================================
@@ -48,22 +41,25 @@ interface AppTextProps extends TextProps {
   children: React.ReactNode;
 }
 
-/**
- * Mapea cada preset a su estilo tipográfico.
- * Hero/Title/Subtitle/Overline usan la fuente pixel (Press Start 2P).
- * Body y menores usan la fuente mono (Courier New) para legibilidad.
- *
- * Escala fluida — ratio ~1.15 entre niveles adyacentes:
- *   hero(24) → title(20) → subtitle(16) → body(15) → bodySmall(14) → caption(13) → overline(11)
- */
-const presetStyles: Record<TextPreset, TextStyle> = {
-  hero:      { fontSize: 24, fontWeight: '400', lineHeight: 24 * 1.6, letterSpacing: 2 },
-  title:     { fontSize: 20, fontWeight: '400', lineHeight: 20 * 1.5, letterSpacing: 1.5 },
-  subtitle:  { fontSize: 16, fontWeight: '400', lineHeight: 16 * 1.5, letterSpacing: 1 },
-  body:      { fontSize: 15, fontWeight: '400', lineHeight: 15 * 1.7, letterSpacing: 0.3 },
-  bodySmall: { fontSize: 14, fontWeight: '400', lineHeight: 14 * 1.6, letterSpacing: 0.3 },
-  caption:   { fontSize: 13, fontWeight: '400', lineHeight: 13 * 1.5, letterSpacing: 0.3 },
-  overline:  { fontSize: 11, fontWeight: '400', lineHeight: 11 * 1.5, letterSpacing: 0.5 },
+/** Relacion line-height por preset (se aplica sobre el tamaño del tema). */
+const lineHeightRatio: Record<TextPreset, number> = {
+  hero: 1.6,
+  title: 1.5,
+  subtitle: 1.5,
+  body: 1.7,
+  bodySmall: 1.6,
+  caption: 1.5,
+  overline: 1.5,
+};
+
+const letterSpacingByPreset: Record<TextPreset, number> = {
+  hero: 2,
+  title: 1.5,
+  subtitle: 1,
+  body: 0.3,
+  bodySmall: 0.3,
+  caption: 0.3,
+  overline: 0.5,
 };
 
 /** Presets que usan pixel font (headings) vs mono (body) */
@@ -79,10 +75,18 @@ export const AppText: React.FC<AppTextProps> = ({
   const theme = useAppTheme();
 
   const resolvedColor = color ?? theme.colors.textPrimary;
-  const presetStyle = presetStyles[preset];
+  // Tamaño desde el tema → ya incorpora la escala del usuario y reacciona.
+  const fontSize = theme.typography.sizes[preset];
   const fontFamily = pixelPresets.has(preset)
-    ? theme.typography.fontFamily      // Press Start 2P
-    : theme.typography.fontFamilyMono; // Courier New
+    ? theme.typography.fontFamily      // headings
+    : theme.typography.fontFamilyMono; // body
+
+  const presetStyle: TextStyle = {
+    fontSize,
+    fontWeight: '400',
+    lineHeight: fontSize * lineHeightRatio[preset],
+    letterSpacing: letterSpacingByPreset[preset],
+  };
 
   return (
     <Text

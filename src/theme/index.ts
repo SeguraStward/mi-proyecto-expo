@@ -23,8 +23,10 @@
  * ============================================================================
  */
 
+import { useMemo } from 'react';
 import { ColorSchemeName } from 'react-native';
 
+import { FONT_FAMILIES, useFontPreferences } from '@/src/context/FontPreferencesContext';
 import { useThemeToggle } from '@/src/context/ThemeContext';
 
 // ── Re-exportar tipos de cada módulo ──────────────────────────────────────────
@@ -79,10 +81,51 @@ export function getAppTheme(mode: ColorSchemeName): AppTheme {
 
 /**
  * Hook que retorna el tema activo según la preferencia del usuario.
- * Lee del ThemeContext (toggle manual) en lugar del sistema.
+ *
+ * Combina:
+ *   - El modo claro/oscuro (ThemeContext).
+ *   - La fuente y el tamaño elegidos (FontPreferencesContext): se inyectan en
+ *     `typography` para que TODO componente que use tokens del DS
+ *     (theme.typography.fontFamily / fontFamilyMono / sizes) reaccione.
+ *
+ * Modo de fuente 'default' (Original): conserva pixel headings + mono body.
+ * Cualquier otra fuente se aplica a headings Y body por igual.
+ *
  * Uso: const theme = useAppTheme();
  */
 export function useAppTheme(): AppTheme {
   const { mode } = useThemeToggle();
-  return getAppTheme(mode);
+  const { bodyFont, sizeScale } = useFontPreferences();
+  const base = getAppTheme(mode);
+
+  return useMemo(() => {
+    const applyFamily = bodyFont !== 'default';
+    if (!applyFamily && sizeScale === 1) {
+      return base; // sin cambios → tema original
+    }
+
+    const s = base.typography.sizes;
+    const scaledSizes = {
+      hero: Math.round(s.hero * sizeScale),
+      title: Math.round(s.title * sizeScale),
+      subtitle: Math.round(s.subtitle * sizeScale),
+      body: Math.round(s.body * sizeScale),
+      bodySmall: Math.round(s.bodySmall * sizeScale),
+      caption: Math.round(s.caption * sizeScale),
+      overline: Math.round(s.overline * sizeScale),
+    };
+
+    const fam = FONT_FAMILIES[bodyFont];
+    return {
+      ...base,
+      typography: {
+        ...base.typography,
+        // applyFamily=false → conservar fuentes originales del tema.
+        // Titulos en SemiBold, cuerpo en Regular para mejor legibilidad.
+        fontFamily: applyFamily ? (fam.heading as string) : base.typography.fontFamily,
+        fontFamilyMono: applyFamily ? (fam.body as string) : base.typography.fontFamilyMono,
+        sizes: scaledSizes,
+      },
+    };
+  }, [base, bodyFont, sizeScale]);
 }
